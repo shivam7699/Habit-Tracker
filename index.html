@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Habit Tracker · teal dark</title>
-  <!-- Tailwind (light usage) & fonts -->
+  <title>Habit Tracker · teal dark + charts</title>
+  <!-- Tailwind (light) & fonts -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Chart.js 4 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     :root {
       --bg: #0a0f14;
@@ -22,11 +24,10 @@
       --accent-dim: rgba(0, 212, 170, 0.15);
       --danger: #ff6b6b;
       --warning: #ffd93d;
+      --chart-grid: rgba(255,255,255,0.05);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       font-family: 'Inter', sans-serif;
@@ -37,23 +38,19 @@
       overflow-x: hidden;
     }
 
-    h1, h2, h3, h4 {
-      font-family: 'Space Grotesk', sans-serif;
-    }
+    h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
 
     .bg-pattern {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: 
-        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0, 150, 200, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,212,170,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0,150,200,0.06) 0%, transparent 50%),
         var(--bg);
       z-index: -1;
     }
 
     .grid-overlay {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background-image: 
         linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
@@ -67,217 +64,127 @@
       border-radius: 16px;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-
     .habit-card:hover {
       background: var(--card-hover);
-      border-color: rgba(0, 212, 170, 0.3);
+      border-color: rgba(0,212,170,0.3);
       transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
 
     .day-btn {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: transparent;
       color: var(--muted);
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 12px; font-weight: 500;
       cursor: pointer;
       transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
     }
-
-    .day-btn:hover {
-      border-color: var(--accent);
-      background: var(--accent-dim);
-    }
-
-    .day-btn.completed {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: var(--bg);
-    }
-
-    .day-btn.today {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-dim);
-    }
-
-    .check-animation {
-      animation: checkPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    @keyframes checkPop {
-      0% { transform: scale(0.8); }
-      50% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
+    .day-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+    .day-btn.completed { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+    .day-btn.today { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+    .check-animation { animation: checkPop 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); }
+    @keyframes checkPop { 0% { transform: scale(0.8); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
     .stat-card {
-      background: linear-gradient(135deg, var(--card) 0%, rgba(21, 29, 38, 0.8) 100%);
+      background: linear-gradient(135deg, var(--card) 0%, rgba(21,29,38,0.8) 100%);
       border: 1px solid var(--border);
       border-radius: 16px;
       position: relative;
       overflow: hidden;
     }
-
     .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
       background: linear-gradient(90deg, var(--accent), transparent);
     }
 
     .add-btn {
       background: linear-gradient(135deg, var(--accent) 0%, #00b894 100%);
-      color: var(--bg);
-      border: none;
-      border-radius: 12px;
-      padding: 12px 24px;
-      font-weight: 600;
-      font-family: 'Space Grotesk', sans-serif;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      color: var(--bg); border: none; border-radius: 12px; padding: 12px 24px;
+      font-weight: 600; font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer; transition: all 0.3s ease;
+      display: flex; align-items: center; gap: 8px;
     }
-
-    .add-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 212, 170, 0.3);
-    }
+    .add-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,170,0.3); }
 
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      opacity: 0;
-      visibility: hidden;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; opacity: 0; visibility: hidden;
       transition: all 0.3s ease;
     }
-
-    .modal-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
-
+    .modal-overlay.active { opacity: 1; visibility: visible; }
     .modal {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+      padding: 32px; width: 90%; max-width: 420px;
+      transform: scale(0.9) translateY(20px);
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+
+    .input-field {
+      width: 100%; background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; color: var(--fg); font-size: 15px;
+      transition: all 0.2s ease;
+    }
+    .input-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+    .streak-badge { background: var(--accent-dim); color: var(--accent); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+    .delete-btn { opacity: 0; transition: opacity 0.2s ease; background: transparent; border: none; color: var(--danger); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .habit-card:hover .delete-btn { opacity: 1; }
+    .delete-btn:hover { background: rgba(255,107,107,0.1); }
+
+    /* charts container styling */
+    .chart-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 32px;
-      width: 90%;
-      max-width: 420px;
-      transform: scale(0.9) translateY(20px);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 1.25rem;
+      transition: all 0.2s;
     }
+    .chart-card:hover { border-color: var(--accent-dim); }
 
-    .modal-overlay.active .modal {
-      transform: scale(1) translateY(0);
-    }
-
-    .input-field {
-      width: 100%;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      color: var(--fg);
-      font-size: 15px;
-      transition: all 0.2s ease;
-    }
-
-    .input-field:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-dim);
-    }
-
-    .input-field::placeholder {
-      color: var(--muted);
-    }
-
-    .streak-badge {
-      background: var(--accent-dim);
-      color: var(--accent);
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .delete-btn {
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      background: transparent;
-      border: none;
-      color: var(--danger);
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 8px;
-    }
-
-    .habit-card:hover .delete-btn {
-      opacity: 1;
-    }
-
-    .delete-btn:hover {
-      background: rgba(255, 107, 107, 0.1);
-    }
-
-    .fade-in {
-      animation: fadeIn 0.5s ease forwards;
-    }
-
-    .slide-up {
-      animation: slideUp 0.5s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes slideUp {
-      from { 
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to { 
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
+    .fade-in { animation: fadeIn 0.5s ease forwards; }
+    .slide-up { animation: slideUp 0.5s ease forwards; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .stagger-1 { animation-delay: 0.1s; }
     .stagger-2 { animation-delay: 0.2s; }
     .stagger-3 { animation-delay: 0.3s; }
     .stagger-4 { animation-delay: 0.4s; }
 
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
-
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: var(--bg-secondary); }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    canvas { display: block; max-width: 100%; height: auto; border-radius: 12px; }
+    
+    /* Month selector styling */
+    .month-selector {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 16px;
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer;
+    }
+    .month-selector:hover {
+      border-color: var(--accent);
+    }
+    .month-stats {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px;
+      border-left: 3px solid var(--accent);
+    }
   </style>
 </head>
 <body>
@@ -289,26 +196,42 @@
     <header class="mb-10 fade-in">
       <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <p class="text-sm uppercase tracking-widest mb-2" style="color: var(--accent);">Daily Progress</p>
-          <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Habit Tracker</h1>
+          <p class="text-sm uppercase tracking-widest mb-2" style="color: var(--accent);">Daily Progress of Shivam</p>
+          <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Solo Leveling</h1>
         </div>
         <div class="flex items-center gap-4">
           <div class="text-right">
             <p class="text-sm" style="color: var(--muted);" id="current-date"></p>
             <p class="text-2xl font-bold font-['Space_Grotesk']" id="greeting"></p>
           </div>
-          <button class="add-btn" onclick="openModal()">
+          <button class="add-btn" onclick="window.openModal()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
             Add Habit
           </button>
+		  
+          <!-- Backup buttons -->
+          <div class="flex flex-wrap gap-2 mt-4 md:mt-0">
+            <button onclick="saveTodayBackup()" class="add-btn" style="background: #4a5b6b; padding: 10px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              📅 Save Today
+            </button>
+            
+            <button onclick="exportAllData()" class="add-btn" style="background: #4a5b6b; padding: 10px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 5 17 10"/><line x1="12" y1="15" x2="12" y2="5"/>
+              </svg>
+              📊 Export All
+            </button>
+          </div>
         </div>
       </div>
     </header>
 
-    <!-- STATS ROW (4 cards) -->
+    <!-- STATS ROW -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
       <div class="stat-card p-5 slide-up stagger-1" style="opacity: 0;">
         <p class="text-xs uppercase tracking-wider mb-1" style="color: var(--muted);">Today</p>
@@ -334,16 +257,95 @@
       </div>
     </div>
 
-    <!-- WEEK NAVIGATION: MON..SUN -->
+    <!-- CHART SECTION -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 slide-up" style="opacity: 0; animation-delay: 0.45s;">
+      
+      <!-- 1. PIE CHART -->
+      <div class="chart-card flex flex-col items-center">
+        <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Today's split</h3>
+        <div class="w-full max-w-[160px] mx-auto aspect-square">
+          <canvas id="pieChart" width="160" height="160"></canvas>
+        </div>
+        <p class="text-xs mt-2" style="color: var(--muted);">completed vs remaining</p>
+      </div>
+
+      <!-- 2. BAR CHART -->
+      <div class="chart-card flex flex-col items-center">
+        <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">This week</h3>
+        <div class="w-full h-[130px]">
+          <canvas id="barChart" width="200" height="130"></canvas>
+        </div>
+        <p class="text-xs mt-1" style="color: var(--muted);">completed per day</p>
+      </div>
+
+      <!-- 3. LINE GRAPH -->
+      <div class="chart-card flex flex-col items-center">
+        <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Trend (7d)</h3>
+        <div class="w-full h-[130px]">
+          <canvas id="lineChart" width="200" height="130"></canvas>
+        </div>
+        <p class="text-xs mt-1" style="color: var(--muted);">daily completion %</p>
+      </div>
+    </div>
+
+    <!-- MONTHLY VIEW SECTION (NEW) -->
+    <div class="mb-8 slide-up" style="opacity: 0; animation-delay: 0.48s;">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <h2 class="text-xl font-bold flex items-center gap-2">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          Monthly Overview
+        </h2>
+        <div class="flex gap-2">
+          <select id="monthSelector" class="month-selector" onchange="window.loadMonthData()">
+            <option value="">Select Month</option>
+          </select>
+          <button onclick="window.exportMonthData()" class="add-btn" style="background: #4a5b6b; padding: 8px 16px;">
+            📥 Export Month
+          </button>
+        </div>
+      </div>
+      
+      <!-- Monthly Stats Cards -->
+      <div id="monthlyStats" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4" style="display: none;">
+        <div class="month-stats">
+          <p class="text-xs text-muted mb-1">Days Completed</p>
+          <p class="text-2xl font-bold" id="monthDaysCompleted">0</p>
+        </div>
+        <div class="month-stats">
+          <p class="text-xs text-muted mb-1">Completion Rate</p>
+          <p class="text-2xl font-bold" id="monthCompletionRate">0%</p>
+        </div>
+        <div class="month-stats">
+          <p class="text-xs text-muted mb-1">Best Day</p>
+          <p class="text-2xl font-bold" id="monthBestDay">-</p>
+        </div>
+        <div class="month-stats">
+          <p class="text-xs text-muted mb-1">Total Check-ins</p>
+          <p class="text-2xl font-bold" id="monthTotalCheckins">0</p>
+        </div>
+      </div>
+      
+      <!-- Monthly Heatmap/Calendar -->
+      <div id="monthCalendar" class="grid grid-cols-7 gap-1 p-4" style="background: var(--card); border-radius: 16px; border: 1px solid var(--border);">
+        <!-- Days will be populated here -->
+      </div>
+    </div>
+
+    <!-- WEEK NAVIGATION -->
     <div class="flex items-center justify-between mb-6 slide-up" style="opacity: 0; animation-delay: 0.5s;">
       <h2 class="text-xl font-bold">This Week</h2>
       <div class="flex gap-2" id="week-days"></div>
     </div>
 
-    <!-- HABITS CONTAINER (dynamic) -->
+    <!-- HABITS CONTAINER -->
     <div class="space-y-4" id="habits-container"></div>
 
-    <!-- EMPTY STATE (hidden if habits exist) -->
+    <!-- EMPTY STATE -->
     <div class="text-center py-20 slide-up" style="opacity: 0; animation-delay: 0.6s; display: none;" id="empty-state">
       <div class="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center" style="background: var(--accent-dim);">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round">
@@ -352,21 +354,20 @@
       </div>
       <h3 class="text-xl font-bold mb-2">No habits yet</h3>
       <p style="color: var(--muted);" class="mb-6">Start building better habits today</p>
-      <button class="add-btn mx-auto" onclick="openModal()">
+      <button class="add-btn mx-auto" onclick="window.openModal()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
         Create Your First Habit
       </button>
     </div>
   </div>
 
-  <!-- MODAL: ADD HABIT -->
+  <!-- MODAL -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
       <h3 class="text-2xl font-bold mb-6">New Habit</h3>
-      <form onsubmit="addHabit(event)">
+      <form id="add-habit-form">
         <div class="mb-4">
           <label class="block text-sm mb-2" style="color: var(--muted);">Habit Name</label>
           <input type="text" class="input-field" id="habit-name" placeholder="e.g., Morning meditation" autocomplete="off" required>
@@ -374,29 +375,28 @@
         <div class="mb-6">
           <label class="block text-sm mb-2" style="color: var(--muted);">Icon</label>
           <div class="flex gap-2 flex-wrap" id="icon-picker">
-            <!-- fitness (default) -->
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--accent); background: var(--accent-dim);" data-icon="fitness" onclick="selectIcon(this)">
+            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--accent); background: var(--accent-dim);" data-icon="fitness" onclick="window.selectIcon(this)">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M2 12h4M18 12h4M6 6v12M18 6v12"/></svg>
             </button>
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="book" onclick="selectIcon(this)">
+            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="book" onclick="window.selectIcon(this)">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             </button>
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="water" onclick="selectIcon(this)">
+            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="water" onclick="window.selectIcon(this)">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
             </button>
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="sleep" onclick="selectIcon(this)">
+            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="sleep" onclick="window.selectIcon(this)">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </button>
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="code" onclick="selectIcon(this)">
+            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="code" onclick="window.selectIcon(this)">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             </button>
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="heart" onclick="selectIcon(this)">
+            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="heart" onclick="window.selectIcon(this)">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             </button>
           </div>
         </div>
         <div class="flex gap-3">
-          <button type="button" class="flex-1 py-3 rounded-xl font-semibold transition-all" style="background: var(--bg-secondary); border: 1px solid var(--border);" onclick="closeModal()">Cancel</button>
+          <button type="button" class="flex-1 py-3 rounded-xl font-semibold transition-all" style="background: var(--bg-secondary); border: 1px solid var(--border);" onclick="window.closeModal()">Cancel</button>
           <button type="submit" class="flex-1 py-3 rounded-xl font-semibold transition-all" style="background: var(--accent); color: var(--bg);">Add Habit</button>
         </div>
       </form>
@@ -404,15 +404,15 @@
   </div>
 
   <script>
-    (function(){
+    (function() {
       "use strict";
 
-      // --- DATA & STATE ---
-      let habits = JSON.parse(localStorage.getItem('habits')) || [];
-      let selectedIcon = 'fitness';      // default selected
+      // ----- GLOBAL VARIABLES -----
+      window.habits = JSON.parse(localStorage.getItem('habits')) || [];
+      window.selectedIcon = 'fitness';
       const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-      // Icon SVGs mapping (consistent, same as in habit card)
       const icons = {
         fitness: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M2 12h4M18 12h4M6 6v12M18 6v12"/></svg>',
         book: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
@@ -422,7 +422,248 @@
         heart: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
       };
 
-      // --- HELPER FUNCTIONS ---
+      // Chart instances
+      window.pieChart = null;
+      window.barChart = null;
+      window.lineChart = null;
+
+      // ----- BACKUP FUNCTIONS -----
+      window.saveTodayBackup = function() {
+        const today = new Date().toISOString().slice(0,10);
+        const now = new Date().toLocaleTimeString().replace(/:/g, '-');
+        
+        const backupData = {
+          date: today,
+          time: new Date().toLocaleTimeString(),
+          totalHabits: window.habits.length,
+          completedToday: window.habits.filter(h => h.completedDates.includes(today)).length,
+          habits: window.habits,
+          stats: {
+            bestStreak: document.getElementById('best-streak').textContent,
+            weekCompletion: document.getElementById('week-completion').textContent
+          }
+        };
+        
+        const data = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `myhabbit_${today}_${now}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        alert(`✅ Today's data saved!`);
+      };
+
+      window.exportAllData = function() {
+        const dataByMonth = {};
+        
+        window.habits.forEach(habit => {
+          habit.completedDates.forEach(date => {
+            const month = date.slice(0,7);
+            if (!dataByMonth[month]) {
+              dataByMonth[month] = { month: month, habits: {} };
+            }
+            if (!dataByMonth[month].habits[habit.name]) {
+              dataByMonth[month].habits[habit.name] = [];
+            }
+            dataByMonth[month].habits[habit.name].push(date);
+          });
+        });
+        
+        const fullExport = {
+          exportDate: new Date().toISOString(),
+          totalHabits: window.habits.length,
+          monthsOfData: Object.keys(dataByMonth),
+          monthlyData: dataByMonth,
+          rawHabits: window.habits
+        };
+        
+        const data = JSON.stringify(fullExport, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `myhabbit_full_export_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      // ----- MONTHLY VIEW FUNCTIONS (NEW) -----
+      window.populateMonthSelector = function() {
+        const months = new Set();
+        window.habits.forEach(habit => {
+          habit.completedDates.forEach(date => {
+            months.add(date.slice(0,7));
+          });
+        });
+        
+        // Add current month even if no data
+        months.add(new Date().toISOString().slice(0,7));
+        
+        const sortedMonths = Array.from(months).sort().reverse();
+        const selector = document.getElementById('monthSelector');
+        selector.innerHTML = '<option value="">Select Month</option>';
+        
+        sortedMonths.forEach(month => {
+          const [year, monthNum] = month.split('-');
+          const option = document.createElement('option');
+          option.value = month;
+          option.textContent = `${monthNames[parseInt(monthNum)-1]} ${year}`;
+          selector.appendChild(option);
+        });
+      };
+
+      window.loadMonthData = function() {
+        const month = document.getElementById('monthSelector').value;
+        if (!month) {
+          document.getElementById('monthlyStats').style.display = 'none';
+          document.getElementById('monthCalendar').innerHTML = '<!-- Days will be populated here -->';
+          return;
+        }
+
+        // Get days in month
+        const [year, monthNum] = month.split('-');
+        const daysInMonth = new Date(year, monthNum, 0).getDate();
+        const firstDay = new Date(year, monthNum-1, 1).getDay(); // 0 = Sunday
+        
+        // Calculate statistics
+        let totalCheckins = 0;
+        const dailyCompletions = {};
+        
+        window.habits.forEach(habit => {
+          habit.completedDates.forEach(date => {
+            if (date.startsWith(month)) {
+              totalCheckins++;
+              dailyCompletions[date] = (dailyCompletions[date] || 0) + 1;
+            }
+          });
+        });
+
+        // Find best day
+        let bestDay = { date: '', count: 0 };
+        Object.entries(dailyCompletions).forEach(([date, count]) => {
+          if (count > bestDay.count) {
+            bestDay = { date, count };
+          }
+        });
+
+        // Calculate completion rate
+        const daysWithData = Object.keys(dailyCompletions).length;
+        const completionRate = Math.round((daysWithData / daysInMonth) * 100);
+
+        // Update stats display
+        document.getElementById('monthDaysCompleted').textContent = daysWithData;
+        document.getElementById('monthCompletionRate').textContent = `${completionRate}%`;
+        document.getElementById('monthBestDay').textContent = bestDay.date ? bestDay.date.slice(-2) + ' (' + bestDay.count + ')' : '-';
+        document.getElementById('monthTotalCheckins').textContent = totalCheckins;
+        document.getElementById('monthlyStats').style.display = 'grid';
+
+        // Generate calendar
+        this.generateMonthCalendar(month, daysInMonth, firstDay, dailyCompletions);
+      };
+
+      window.generateMonthCalendar = function(month, daysInMonth, firstDay, dailyCompletions) {
+        const calendar = document.getElementById('monthCalendar');
+        const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        
+        let html = '';
+        
+        // Add weekday headers
+        weekDays.forEach(day => {
+          html += `<div class="text-center text-xs mb-2" style="color: var(--muted);">${day}</div>`;
+        });
+        
+        // Add empty cells for days before month starts
+        for (let i = 0; i < firstDay; i++) {
+          html += `<div class="text-center p-2"></div>`;
+        }
+        
+        // Add days of month
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
+          const completed = dailyCompletions[dateStr] || 0;
+          const totalHabits = window.habits.length;
+          const intensity = totalHabits > 0 ? (completed / totalHabits) * 100 : 0;
+          
+          let bgColor = 'var(--card)';
+          if (completed > 0) {
+            if (intensity >= 75) bgColor = '#00d4aa';
+            else if (intensity >= 50) bgColor = '#00b894';
+            else if (intensity >= 25) bgColor = '#00a37a';
+            else bgColor = '#2a5a4a';
+          }
+          
+          html += `
+            <div class="text-center p-2 rounded-lg text-sm" 
+                 style="background: ${bgColor}; color: ${completed > 0 ? 'black' : 'var(--muted)'}; border: 1px solid var(--border);">
+              ${day}
+              ${completed > 0 ? `<div class="text-xs">${completed}/${totalHabits}</div>` : ''}
+            </div>
+          `;
+        }
+        
+        calendar.innerHTML = html;
+      };
+
+      window.exportMonthData = function() {
+        const month = document.getElementById('monthSelector').value;
+        if (!month) {
+          alert('Please select a month first');
+          return;
+        }
+
+        const [year, monthNum] = month.split('-');
+        const monthData = {
+          month: `${monthNames[parseInt(monthNum)-1]} ${year}`,
+          year: year,
+          month: monthNum,
+          habits: window.habits.map(habit => ({
+            name: habit.name,
+            icon: habit.icon,
+            completedDates: habit.completedDates.filter(date => date.startsWith(month))
+          })),
+          stats: {
+            daysCompleted: document.getElementById('monthDaysCompleted').textContent,
+            completionRate: document.getElementById('monthCompletionRate').textContent,
+            bestDay: document.getElementById('monthBestDay').textContent,
+            totalCheckins: document.getElementById('monthTotalCheckins').textContent
+          }
+        };
+
+        const data = JSON.stringify(monthData, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `myhabbit_${month}_summary.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      // ----- AUTO-BACKUP REMINDER -----
+      window.checkForAutoBackup = function() {
+        const lastBackup = localStorage.getItem('lastBackupDate');
+        const today = new Date().toISOString().slice(0,10);
+        
+        if (lastBackup !== today && window.habits.length > 0) {
+          const reminderDiv = document.createElement('div');
+          reminderDiv.className = 'fixed bottom-4 right-4 bg-card border border-accent p-4 rounded-lg shadow-lg z-50 animate-slide-up';
+          reminderDiv.innerHTML = `
+            <p class="text-sm mb-2">📁 Save today's progress?</p>
+            <div class="flex gap-2">
+              <button onclick="saveTodayBackup(); this.parentElement.parentElement.remove(); localStorage.setItem('lastBackupDate', '${today}');" 
+                class="px-3 py-1 bg-accent text-black rounded-lg text-sm">Save</button>
+              <button onclick="localStorage.setItem('lastBackupDate', '${today}'); this.parentElement.parentElement.remove();" 
+                class="px-3 py-1 bg-border rounded-lg text-sm">Later</button>
+            </div>
+          `;
+          document.body.appendChild(reminderDiv);
+          setTimeout(() => reminderDiv.remove(), 30000);
+        }
+      };
+
+      // ----- HELPER FUNCTIONS -----
       function getWeekDates() {
         const now = new Date();
         const dayOfWeek = now.getDay();
@@ -437,24 +678,145 @@
         return dates;
       }
 
-      // improved streak: count consecutive days including today and backwards until gap
       function calculateStreak(habit) {
         const today = new Date();
         let streak = 0;
-        for (let i = 0; i < 365; i++) {   // safety
+        for (let i = 0; i < 365; i++) {
           const checkDate = new Date(today);
           checkDate.setDate(today.getDate() - i);
           const dateStr = checkDate.toISOString().split('T')[0];
-          if (habit.completedDates.includes(dateStr)) {
-            streak++;
-          } else {
-            break;   // gap found
-          }
+          if (habit.completedDates.includes(dateStr)) streak++;
+          else break;
         }
         return streak;
       }
 
-      // --- RENDER FUNCTIONS ---
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // ----- CHART FUNCTIONS -----
+      function updateAllCharts() {
+        const dates = getWeekDates();
+        const todayStr = new Date().toISOString().split('T')[0];
+        const totalHabits = window.habits.length;
+
+        // PIE chart
+        let completedToday = 0;
+        window.habits.forEach(h => { if (h.completedDates.includes(todayStr)) completedToday++; });
+        const remaining = totalHabits - completedToday;
+
+        const pieCtx = document.getElementById('pieChart')?.getContext('2d');
+        if (pieCtx) {
+          if (window.pieChart) window.pieChart.destroy();
+          window.pieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+              labels: ['Completed', 'Remaining'],
+              datasets: [{
+                data: [completedToday, remaining],
+                backgroundColor: ['#00d4aa', '#2a3a4a'],
+                borderColor: 'transparent',
+              }]
+            },
+            options: { 
+              responsive: true, 
+              maintainAspectRatio: true,
+              plugins: { legend: { display: false } }
+            }
+          });
+        }
+
+        // BAR chart
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const perDayCounts = dates.map(date => {
+          let count = 0;
+          window.habits.forEach(h => { if (h.completedDates.includes(date)) count++; });
+          return count;
+        });
+
+        const barCtx = document.getElementById('barChart')?.getContext('2d');
+        if (barCtx) {
+          if (window.barChart) window.barChart.destroy();
+          window.barChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+              labels: dayNames,
+              datasets: [{
+                label: 'completed',
+                data: perDayCounts,
+                backgroundColor: '#00d4aa',
+                borderRadius: 6,
+                barPercentage: 0.6,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              scales: { 
+                y: { 
+                  beginAtZero: true, 
+                  grid: { color: 'rgba(255,255,255,0.05)' }, 
+                  ticks: { color: '#6b7d8f' } 
+                },
+                x: { ticks: { color: '#6b7d8f' } }
+              },
+              plugins: { legend: { display: false } }
+            }
+          });
+        }
+
+        // LINE chart
+        const completionPercentages = dates.map(date => {
+          if (totalHabits === 0) return 0;
+          let completed = 0;
+          window.habits.forEach(h => { if (h.completedDates.includes(date)) completed++; });
+          return Math.round((completed / totalHabits) * 100);
+        });
+
+        const lineCtx = document.getElementById('lineChart')?.getContext('2d');
+        if (lineCtx) {
+          if (window.lineChart) window.lineChart.destroy();
+          window.lineChart = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+              labels: dayNames,
+              datasets: [{
+                label: 'completion %',
+                data: completionPercentages,
+                borderColor: '#00d4aa',
+                backgroundColor: 'rgba(0,212,170,0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#00d4aa',
+                pointBorderColor: '#0a0f14',
+                pointBorderWidth: 1,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.2,
+                fill: true
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              scales: { 
+                y: { 
+                  beginAtZero: true, 
+                  max: 100,
+                  grid: { color: 'rgba(255,255,255,0.05)' }, 
+                  ticks: { color: '#6b7d8f' } 
+                },
+                x: { ticks: { color: '#6b7d8f' } }
+              },
+              plugins: { legend: { display: false } }
+            }
+          });
+        }
+      }
+
+      // ----- RENDER FUNCTIONS -----
       function renderWeekDays() {
         const container = document.getElementById('week-days');
         if (!container) return;
@@ -476,15 +838,16 @@
         const dates = getWeekDates();
         const todayStr = new Date().toISOString().split('T')[0];
 
-        if (!habits.length) {
+        if (!window.habits.length) {
           container.innerHTML = '';
           emptyState.style.display = 'block';
+          updateAllCharts();
           return;
         }
 
         emptyState.style.display = 'none';
 
-        container.innerHTML = habits.map((habit, index) => {
+        container.innerHTML = window.habits.map((habit, index) => {
           const streak = calculateStreak(habit);
           return `
             <div class="habit-card p-5 slide-up" style="opacity: 0; animation-delay: ${0.1 * (index + 1)}s;">
@@ -500,7 +863,7 @@
                     </div>
                   </div>
                 </div>
-                <button class="delete-btn" onclick="deleteHabit('${habit.id}')" aria-label="Delete habit">
+                <button class="delete-btn" onclick="window.deleteHabit('${habit.id}')" aria-label="Delete habit">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                   </svg>
@@ -514,7 +877,7 @@
                   return `
                     <button 
                       class="day-btn ${isCompleted ? 'completed' : ''} ${isToday ? 'today' : ''}"
-                      onclick="toggleDay('${habit.id}', '${date}')"
+                      onclick="window.toggleDay('${habit.id}', '${date}')"
                       aria-label="${isCompleted ? 'Mark incomplete' : 'Mark complete'}"
                     >
                       ${isCompleted ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : dayNum}
@@ -525,58 +888,54 @@
             </div>
           `;
         }).join('');
-      }
-
-      // simple escape for habit name (XSS safety)
-      function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        
+        updateAllCharts();
+        window.populateMonthSelector(); // Update month selector when habits change
       }
 
       function updateStats() {
         const dates = getWeekDates();
         const todayStr = new Date().toISOString().split('T')[0];
-
-        // Today completed
+        
         let todayCompleted = 0;
-        habits.forEach(h => { if (h.completedDates.includes(todayStr)) todayCompleted++; });
-        document.getElementById('today-completed').textContent = `${todayCompleted}/${habits.length}`;
-        const progressPercent = habits.length ? (todayCompleted / habits.length) * 100 : 0;
+        window.habits.forEach(h => { if (h.completedDates.includes(todayStr)) todayCompleted++; });
+        
+        document.getElementById('today-completed').textContent = `${todayCompleted}/${window.habits.length}`;
+        const progressPercent = window.habits.length ? (todayCompleted / window.habits.length) * 100 : 0;
         document.getElementById('today-progress').style.width = `${progressPercent}%`;
 
-        // Best streak (max of current streaks)
         let bestStreak = 0;
-        habits.forEach(h => { bestStreak = Math.max(bestStreak, calculateStreak(h)); });
+        window.habits.forEach(h => { bestStreak = Math.max(bestStreak, calculateStreak(h)); });
         document.getElementById('best-streak').textContent = bestStreak;
 
-        // Week completion
-        let totalPossible = habits.length * 7;
         let totalCompleted = 0;
-        habits.forEach(h => {
-          dates.forEach(d => { if (h.completedDates.includes(d)) totalCompleted++; });
-        });
+        window.habits.forEach(h => { dates.forEach(d => { if (h.completedDates.includes(d)) totalCompleted++; }); });
+        const totalPossible = window.habits.length * 7;
         const weekPercent = totalPossible ? Math.round((totalCompleted / totalPossible) * 100) : 0;
         document.getElementById('week-completion').textContent = `${weekPercent}%`;
-
-        // Total habits
-        document.getElementById('total-habits').textContent = habits.length;
+        document.getElementById('total-habits').textContent = window.habits.length;
       }
 
-      // --- ACTIONS ---
+      function saveHabits() {
+        localStorage.setItem('habits', JSON.stringify(window.habits));
+      }
+
+      // ----- GLOBAL FUNCTIONS -----
       window.toggleDay = function(habitId, date) {
-        const habit = habits.find(h => h.id === habitId);
+        const habit = window.habits.find(h => h.id === habitId);
         if (!habit) return;
+        
         const idx = habit.completedDates.indexOf(date);
         if (idx > -1) {
           habit.completedDates.splice(idx, 1);
         } else {
           habit.completedDates.push(date);
         }
+        
         saveHabits();
         renderHabits();
         updateStats();
-        // animation class
+        
         setTimeout(() => {
           document.querySelectorAll('.day-btn.completed').forEach(btn => btn.classList.add('check-animation'));
         }, 10);
@@ -585,8 +944,7 @@
       window.openModal = function() {
         document.getElementById('modal').classList.add('active');
         document.getElementById('habit-name').focus();
-        // reset icon selection to default (fitness)
-        selectedIcon = 'fitness';
+        window.selectedIcon = 'fitness';
         document.querySelectorAll('.icon-btn').forEach(btn => {
           if (btn.dataset.icon === 'fitness') {
             btn.style.borderColor = 'var(--accent)';
@@ -601,7 +959,6 @@
       window.closeModal = function() {
         document.getElementById('modal').classList.remove('active');
         document.getElementById('habit-name').value = '';
-        // do not reset selection visually – but keep default consistency
       };
 
       window.selectIcon = function(btn) {
@@ -611,7 +968,7 @@
         });
         btn.style.borderColor = 'var(--accent)';
         btn.style.background = 'var(--accent-dim)';
-        selectedIcon = btn.dataset.icon;
+        window.selectedIcon = btn.dataset.icon;
       };
 
       window.addHabit = function(e) {
@@ -621,15 +978,16 @@
         if (!name) return;
 
         const habit = {
-          id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
+          id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 8),
           name: name,
-          icon: selectedIcon,
+          icon: window.selectedIcon,
           completedDates: [],
           createdAt: new Date().toISOString()
         };
-        habits.push(habit);
+        
+        window.habits.push(habit);
         saveHabits();
-        closeModal();
+        window.closeModal();
         renderHabits();
         updateStats();
         nameInput.value = '';
@@ -637,49 +995,56 @@
 
       window.deleteHabit = function(habitId) {
         if (!confirm('Delete this habit?')) return;
-        habits = habits.filter(h => h.id !== habitId);
+        window.habits = window.habits.filter(h => h.id !== habitId);
         saveHabits();
         renderHabits();
         updateStats();
       };
 
-      function saveHabits() {
-        localStorage.setItem('habits', JSON.stringify(habits));
-      }
-
-      // date & greeting
+      // ----- DATE & GREETING -----
       function updateDateTime() {
         const now = new Date();
         const options = { weekday: 'long', month: 'long', day: 'numeric' };
         document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
         const hour = now.getHours();
         let greeting = 'Good evening';
-        if (hour < 12) greeting = 'Good morning';
-        else if (hour < 18) greeting = 'Good afternoon';
+        if (hour < 12) greeting = 'Good morning Shivam';
+        else if (hour < 16) greeting = 'Good afternoon Shivam';
+        else if (hour < 24) greeting = 'Good evening Shivam';
         document.getElementById('greeting').textContent = greeting;
       }
 
-      // initial render
+      // ----- INITIALIZATION -----
       function init() {
         updateDateTime();
         renderWeekDays();
         renderHabits();
         updateStats();
         setInterval(updateDateTime, 60000);
+        setTimeout(window.checkForAutoBackup, 2000);
+
+        const form = document.getElementById('add-habit-form');
+        if (form) {
+          form.addEventListener('submit', window.addHabit);
+        }
+
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') window.closeModal();
+        });
+
+        const modalEl = document.getElementById('modal');
+        if (modalEl) {
+          modalEl.addEventListener('click', function(e) {
+            if (e.target === modalEl) window.closeModal();
+          });
+        }
       }
 
-      // event listeners: modal close on escape & backdrop
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeModal();
-      });
-
-      const modalEl = document.getElementById('modal');
-      modalEl.addEventListener('click', function(e) {
-        if (e.target === modalEl) closeModal();
-      });
-
-      // make sure icons are correctly displayed on page load
-      window.addEventListener('DOMContentLoaded', init);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
     })();
   </script>
 </body>
