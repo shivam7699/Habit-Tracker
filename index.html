@@ -199,8 +199,8 @@
           <p class="text-sm uppercase tracking-widest mb-2" style="color: var(--accent);">Daily Progress of Shivam</p>
           <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Solo Leveling</h1>
         </div>
-        <div class="flex flex-col md:flex-row items-center gap-4">
-          <div class="text-center md:text-right">
+        <div class="flex items-center gap-4">
+          <div class="text-right">
             <p class="text-sm" style="color: var(--muted);" id="current-date"></p>
             <p class="text-2xl font-bold font-['Space_Grotesk']" id="greeting"></p>
           </div>
@@ -257,10 +257,8 @@
       </div>
     </div>
 
-    <!-- CHART SECTION -->
+    <!-- WEEKLY CHARTS SECTION -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 slide-up" style="opacity: 0; animation-delay: 0.45s;">
-      
-      <!-- 1. PIE CHART -->
       <div class="chart-card flex flex-col items-center">
         <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Today's split</h3>
         <div class="w-full max-w-[160px] mx-auto aspect-square">
@@ -268,8 +266,6 @@
         </div>
         <p class="text-xs mt-2" style="color: var(--muted);">completed vs remaining</p>
       </div>
-
-      <!-- 2. BAR CHART -->
       <div class="chart-card flex flex-col items-center">
         <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">This week</h3>
         <div class="w-full h-[130px]">
@@ -277,8 +273,6 @@
         </div>
         <p class="text-xs mt-1" style="color: var(--muted);">completed per day</p>
       </div>
-
-      <!-- 3. LINE GRAPH -->
       <div class="chart-card flex flex-col items-center">
         <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Trend (7d)</h3>
         <div class="w-full h-[130px]">
@@ -288,7 +282,7 @@
       </div>
     </div>
 
-    <!-- MONTHLY VIEW SECTION (NEW) -->
+    <!-- MONTHLY VIEW SECTION (WITH CHARTS) -->
     <div class="mb-8 slide-up" style="opacity: 0; animation-delay: 0.48s;">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
         <h2 class="text-xl font-bold flex items-center gap-2">
@@ -330,7 +324,37 @@
         </div>
       </div>
       
-      <!-- Monthly Heatmap/Calendar -->
+      <!-- MONTHLY CHARTS SECTION (NEW) -->
+      <div id="monthlyChartsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6" style="display: none;">
+        <!-- Monthly Pie Chart -->
+        <div class="chart-card flex flex-col items-center">
+          <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Monthly split</h3>
+          <div class="w-full max-w-[160px] mx-auto aspect-square">
+            <canvas id="monthlyPieChart" width="160" height="160"></canvas>
+          </div>
+          <p class="text-xs mt-2" style="color: var(--muted);" id="monthlyPieLabel">completed vs missed</p>
+        </div>
+
+        <!-- Monthly Bar Chart -->
+        <div class="chart-card flex flex-col items-center">
+          <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Habit frequency</h3>
+          <div class="w-full h-[130px]">
+            <canvas id="monthlyBarChart" width="200" height="130"></canvas>
+          </div>
+          <p class="text-xs mt-1" style="color: var(--muted);">completions per habit</p>
+        </div>
+
+        <!-- Monthly Line Chart -->
+        <div class="chart-card flex flex-col items-center">
+          <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Daily trend</h3>
+          <div class="w-full h-[130px]">
+            <canvas id="monthlyLineChart" width="200" height="130"></canvas>
+          </div>
+          <p class="text-xs mt-1" style="color: var(--muted);">completions per day</p>
+        </div>
+      </div>
+      
+      <!-- Monthly Calendar -->
       <div id="monthCalendar" class="grid grid-cols-7 gap-1 p-4" style="background: var(--card); border-radius: 16px; border: 1px solid var(--border);">
         <!-- Days will be populated here -->
       </div>
@@ -413,6 +437,14 @@
       const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
+      // Chart instances
+      window.pieChart = null;
+      window.barChart = null;
+      window.lineChart = null;
+      window.monthlyPieChart = null;
+      window.monthlyBarChart = null;
+      window.monthlyLineChart = null;
+
       const icons = {
         fitness: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M2 12h4M18 12h4M6 6v12M18 6v12"/></svg>',
         book: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
@@ -421,11 +453,6 @@
         code: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
         heart: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
       };
-
-      // Chart instances
-      window.pieChart = null;
-      window.barChart = null;
-      window.lineChart = null;
 
       // ----- BACKUP FUNCTIONS -----
       window.saveTodayBackup = function() {
@@ -489,7 +516,7 @@
         URL.revokeObjectURL(url);
       };
 
-      // ----- MONTHLY VIEW FUNCTIONS (NEW) -----
+      // ----- MONTHLY VIEW FUNCTIONS (WITH CHARTS) -----
       window.populateMonthSelector = function() {
         const months = new Set();
         window.habits.forEach(habit => {
@@ -518,6 +545,7 @@
         const month = document.getElementById('monthSelector').value;
         if (!month) {
           document.getElementById('monthlyStats').style.display = 'none';
+          document.getElementById('monthlyChartsContainer').style.display = 'none';
           document.getElementById('monthCalendar').innerHTML = '<!-- Days will be populated here -->';
           return;
         }
@@ -530,12 +558,19 @@
         // Calculate statistics
         let totalCheckins = 0;
         const dailyCompletions = {};
+        const habitCompletions = {};
+        
+        // Initialize habit completions
+        window.habits.forEach(habit => {
+          habitCompletions[habit.name] = 0;
+        });
         
         window.habits.forEach(habit => {
           habit.completedDates.forEach(date => {
             if (date.startsWith(month)) {
               totalCheckins++;
               dailyCompletions[date] = (dailyCompletions[date] || 0) + 1;
+              habitCompletions[habit.name] = (habitCompletions[habit.name] || 0) + 1;
             }
           });
         });
@@ -558,14 +593,131 @@
         document.getElementById('monthBestDay').textContent = bestDay.date ? bestDay.date.slice(-2) + ' (' + bestDay.count + ')' : '-';
         document.getElementById('monthTotalCheckins').textContent = totalCheckins;
         document.getElementById('monthlyStats').style.display = 'grid';
+        document.getElementById('monthlyChartsContainer').style.display = 'grid';
 
+        // Update monthly charts
+        updateMonthlyCharts(month, dailyCompletions, habitCompletions, daysInMonth);
+        
         // Generate calendar
-        this.generateMonthCalendar(month, daysInMonth, firstDay, dailyCompletions);
+        generateMonthCalendar(month, daysInMonth, firstDay, dailyCompletions);
       };
 
-      window.generateMonthCalendar = function(month, daysInMonth, firstDay, dailyCompletions) {
+      function updateMonthlyCharts(month, dailyCompletions, habitCompletions, daysInMonth) {
+        const totalHabits = window.habits.length;
+        const daysWithData = Object.keys(dailyCompletions).length;
+        const daysMissed = daysInMonth - daysWithData;
+        
+        // Monthly Pie Chart - Days completed vs missed
+        const pieCtx = document.getElementById('monthlyPieChart')?.getContext('2d');
+        if (pieCtx) {
+          if (window.monthlyPieChart) window.monthlyPieChart.destroy();
+          window.monthlyPieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+              labels: ['Days with progress', 'Days missed'],
+              datasets: [{
+                data: [daysWithData, daysMissed],
+                backgroundColor: ['#00d4aa', '#2a3a4a'],
+                borderColor: 'transparent',
+              }]
+            },
+            options: { 
+              responsive: true, 
+              maintainAspectRatio: true,
+              plugins: { legend: { display: false } }
+            }
+          });
+          document.getElementById('monthlyPieLabel').textContent = `${daysWithData} days active`;
+        }
+
+        // Monthly Bar Chart - Completions per habit
+        const barCtx = document.getElementById('monthlyBarChart')?.getContext('2d');
+        if (barCtx) {
+          if (window.monthlyBarChart) window.monthlyBarChart.destroy();
+          window.monthlyBarChart = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+              labels: Object.keys(habitCompletions).map(name => name.length > 8 ? name.substring(0,6)+'..' : name),
+              datasets: [{
+                label: 'completions',
+                data: Object.values(habitCompletions),
+                backgroundColor: '#00d4aa',
+                borderRadius: 6,
+                barPercentage: 0.6,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              scales: { 
+                y: { 
+                  beginAtZero: true, 
+                  grid: { color: 'rgba(255,255,255,0.05)' }, 
+                  ticks: { color: '#6b7d8f' } 
+                },
+                x: { ticks: { color: '#6b7d8f', maxRotation: 45, minRotation: 45 } }
+              },
+              plugins: { legend: { display: false } }
+            }
+          });
+        }
+
+        // Monthly Line Chart - Daily completion trend
+        const days = [];
+        const completionCounts = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
+          days.push(day);
+          completionCounts.push(dailyCompletions[dateStr] || 0);
+        }
+
+        const lineCtx = document.getElementById('monthlyLineChart')?.getContext('2d');
+        if (lineCtx) {
+          if (window.monthlyLineChart) window.monthlyLineChart.destroy();
+          window.monthlyLineChart = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+              labels: days.filter((_, i) => i % 5 === 0), // Show every 5th day label
+              datasets: [{
+                label: 'completions',
+                data: completionCounts,
+                borderColor: '#00d4aa',
+                backgroundColor: 'rgba(0,212,170,0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#00d4aa',
+                pointBorderColor: '#0a0f14',
+                pointBorderWidth: 1,
+                pointRadius: 2,
+                pointHoverRadius: 4,
+                tension: 0.2,
+                fill: true
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              scales: { 
+                y: { 
+                  beginAtZero: true, 
+                  max: totalHabits,
+                  grid: { color: 'rgba(255,255,255,0.05)' }, 
+                  ticks: { color: '#6b7d8f' } 
+                },
+                x: { 
+                  ticks: { color: '#6b7d8f' },
+                  title: { display: true, text: 'Day of month', color: '#6b7d8f' }
+                }
+              },
+              plugins: { legend: { display: false } }
+            }
+          });
+        }
+      }
+
+      function generateMonthCalendar(month, daysInMonth, firstDay, dailyCompletions) {
         const calendar = document.getElementById('monthCalendar');
         const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const totalHabits = window.habits.length;
         
         let html = '';
         
@@ -583,7 +735,6 @@
         for (let day = 1; day <= daysInMonth; day++) {
           const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
           const completed = dailyCompletions[dateStr] || 0;
-          const totalHabits = window.habits.length;
           const intensity = totalHabits > 0 ? (completed / totalHabits) * 100 : 0;
           
           let bgColor = 'var(--card)';
@@ -591,20 +742,20 @@
             if (intensity >= 75) bgColor = '#00d4aa';
             else if (intensity >= 50) bgColor = '#00b894';
             else if (intensity >= 25) bgColor = '#00a37a';
-            else bgColor = '#2a5a4a';
+            else bgColor = '#1a5a4a';
           }
           
           html += `
-            <div class="text-center p-2 rounded-lg text-sm" 
+            <div class="text-center p-2 rounded-lg text-sm transition-all hover:scale-105" 
                  style="background: ${bgColor}; color: ${completed > 0 ? 'black' : 'var(--muted)'}; border: 1px solid var(--border);">
-              ${day}
-              ${completed > 0 ? `<div class="text-xs">${completed}/${totalHabits}</div>` : ''}
+              <div class="font-bold">${day}</div>
+              ${completed > 0 ? `<div class="text-xs mt-1">${completed}/${totalHabits}</div>` : ''}
             </div>
           `;
         }
         
         calendar.innerHTML = html;
-      };
+      }
 
       window.exportMonthData = function() {
         const month = document.getElementById('monthSelector').value;
@@ -697,7 +848,7 @@
         return div.innerHTML;
       }
 
-      // ----- CHART FUNCTIONS -----
+      // ----- WEEKLY CHART FUNCTIONS -----
       function updateAllCharts() {
         const dates = getWeekDates();
         const todayStr = new Date().toISOString().split('T')[0];
@@ -890,7 +1041,7 @@
         }).join('');
         
         updateAllCharts();
-        window.populateMonthSelector(); // Update month selector when habits change
+        window.populateMonthSelector();
       }
 
       function updateStats() {
