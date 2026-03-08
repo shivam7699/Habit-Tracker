@@ -1,806 +1,1898 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Habit Tracker · teal dark + charts</title>
-  <!-- Tailwind (light) & fonts -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <!-- Chart.js 4 -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --bg: #0a0f14;
-      --bg-secondary: #111920;
-      --card: #151d26;
-      --card-hover: #1a242f;
-      --border: #243040;
-      --fg: #f0f4f8;
-      --muted: #6b7d8f;
-      --accent: #00d4aa;
-      --accent-dim: rgba(0, 212, 170, 0.15);
-      --danger: #ff6b6b;
-      --warning: #ffd93d;
-      --chart-grid: rgba(255,255,255,0.05);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solo Leveling · Habit RPG</title>
+    <!-- Tailwind & fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a0f14;
+            --bg-secondary: #111920;
+            --card: #151d26;
+            --card-hover: #1a242f;
+            --border: #243040;
+            --fg: #f0f4f8;
+            --muted: #6b7d8f;
+            --accent: #00d4aa;
+            --accent-dim: rgba(0, 212, 170, 0.15);
+            --danger: #ff6b6b;
+            --warning: #ffd93d;
+            --chart-grid: rgba(255, 255, 255, 0.05);
+            --level-1: #8b5cf6;
+            --level-2: #ec4899;
+            --level-3: #f97316;
+            --level-4: #eab308;
+            --level-5: #22c55e;
+            --progress-start: #4a5b6b;
+            --progress-25: #00a37a;
+            --progress-50: #00b894;
+            --progress-75: #00d4aa;
+            --progress-100: #00ffcc;
+        }
 
-    * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      min-height: 100vh;
-      margin: 0;
-      overflow-x: hidden;
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
 
-    h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
 
-    .bg-pattern {
-      position: fixed; inset: 0;
-      background: 
-        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,212,170,0.08) 0%, transparent 50%),
-        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0,150,200,0.06) 0%, transparent 50%),
-        var(--bg);
-      z-index: -1;
-    }
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0, 212, 170, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0, 150, 200, 0.06) 0%, transparent 50%),
+                var(--bg);
+            z-index: -1;
+        }
 
-    .grid-overlay {
-      position: fixed; inset: 0;
-      background-image: 
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 60px 60px;
-      z-index: -1;
-    }
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: -1;
+        }
 
-    .habit-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .habit-card:hover {
-      background: var(--card-hover);
-      border-color: rgba(0,212,170,0.3);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    }
+        .habit-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
 
-    .day-btn {
-      width: 36px; height: 36px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      font-size: 12px; font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .day-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
-    .day-btn.completed { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-    .day-btn.today { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
-    .check-animation { animation: checkPop 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); }
-    @keyframes checkPop { 0% { transform: scale(0.8); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .habit-card:hover {
+            background: var(--card-hover);
+            border-color: rgba(0, 212, 170, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
 
-    .stat-card {
-      background: linear-gradient(135deg, var(--card) 0%, rgba(21,29,38,0.8) 100%);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      position: relative;
-      overflow: hidden;
-    }
-    .stat-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--accent), transparent);
-    }
+        .habit-card.streak-7 {
+            border-left: 4px solid #f97316;
+        }
 
-    .add-btn {
-      background: linear-gradient(135deg, var(--accent) 0%, #00b894 100%);
-      color: var(--bg); border: none; border-radius: 12px; padding: 12px 24px;
-      font-weight: 600; font-family: 'Space Grotesk', sans-serif;
-      cursor: pointer; transition: all 0.3s ease;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .add-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,212,170,0.3); }
+        .habit-card.streak-30 {
+            border-left: 4px solid #eab308;
+        }
 
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 100; opacity: 0; visibility: hidden;
-      transition: all 0.3s ease;
-    }
-    .modal-overlay.active { opacity: 1; visibility: visible; }
-    .modal {
-      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
-      padding: 32px; width: 90%; max-width: 420px;
-      transform: scale(0.9) translateY(20px);
-      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-    }
-    .modal-overlay.active .modal { transform: scale(1) translateY(0); }
+        .habit-card.perfect-week {
+            box-shadow: 0 0 15px var(--accent);
+        }
 
-    .input-field {
-      width: 100%; background: var(--bg-secondary); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px 16px; color: var(--fg); font-size: 15px;
-      transition: all 0.2s ease;
-    }
-    .input-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
-    .streak-badge { background: var(--accent-dim); color: var(--accent); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .habit-card.progressive {
+            border-top: 2px solid var(--accent);
+        }
 
-    .delete-btn { opacity: 0; transition: opacity 0.2s ease; background: transparent; border: none; color: var(--danger); cursor: pointer; padding: 8px; border-radius: 8px; }
-    .habit-card:hover .delete-btn { opacity: 1; }
-    .delete-btn:hover { background: rgba(255,107,107,0.1); }
+        .progress-goal {
+            font-size: 0.9rem;
+            color: var(--accent);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
 
-    /* charts container styling */
-    .chart-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 1.25rem;
-      transition: all 0.2s;
-    }
-    .chart-card:hover { border-color: var(--accent-dim); }
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
 
-    .fade-in { animation: fadeIn 0.5s ease forwards; }
-    .slide-up { animation: slideUp 0.5s ease forwards; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .stagger-1 { animation-delay: 0.1s; }
-    .stagger-2 { animation-delay: 0.2s; }
-    .stagger-3 { animation-delay: 0.3s; }
-    .stagger-4 { animation-delay: 0.4s; }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #00ffcc);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
 
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-    }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: var(--bg-secondary); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+        .max-badge {
+            background: linear-gradient(135deg, #f97316, #eab308);
+            color: black;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-left: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
 
-    canvas { display: block; max-width: 100%; height: auto; border-radius: 12px; }
-    
-    /* Month selector styling */
-    .month-selector {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 8px 16px;
-      color: var(--fg);
-      font-family: 'Space Grotesk', sans-serif;
-      cursor: pointer;
-    }
-    .month-selector:hover {
-      border-color: var(--accent);
-    }
-    .month-stats {
-      background: var(--card);
-      border-radius: 12px;
-      padding: 16px;
-      border-left: 3px solid var(--accent);
-    }
-  </style>
+        .day-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day-btn:hover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .day-btn.completed {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg);
+        }
+
+        .day-btn.today {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-dim);
+        }
+
+        .day-btn.future-date {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-style: dashed;
+            color: var(--muted);
+        }
+
+        .day-btn.future-date:hover {
+            border-color: var(--border);
+            background: transparent;
+            transform: none;
+        }
+
+        .day-btn.streak-fire::after {
+            content: '🔥';
+            position: absolute;
+            font-size: 10px;
+            top: -5px;
+            right: -5px;
+        }
+
+        .check-animation {
+            animation: checkPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes checkPop {
+            0% {
+                transform: scale(0.8);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--card) 0%, rgba(21, 29, 38, 0.8) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, var(--accent) 0%, #00b894 100%);
+            color: var(--bg);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 212, 170, 0.3);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            width: 90%;
+            max-width: 500px;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .input-field {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: var(--fg);
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .input-field[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .input-field[type="number"]::-webkit-outer-spin-button,
+        .input-field[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .streak-badge {
+            background: var(--accent-dim);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .delete-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            background: transparent;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .habit-card:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        /* charts container styling */
+        .chart-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.25rem;
+            transition: all 0.2s;
+        }
+
+        .chart-card:hover {
+            border-color: var(--accent-dim);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stagger-1 {
+            animation-delay: 0.1s;
+        }
+
+        .stagger-2 {
+            animation-delay: 0.2s;
+        }
+
+        .stagger-3 {
+            animation-delay: 0.3s;
+        }
+
+        .stagger-4 {
+            animation-delay: 0.4s;
+        }
+
+        /* Gamification styles */
+        .level-up-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, var(--accent), #00a37a);
+            color: black;
+            padding: 2rem;
+            border-radius: 2rem;
+            z-index: 1000;
+            text-align: center;
+            animation: levelUp 2s ease;
+            box-shadow: 0 0 50px var(--accent);
+        }
+
+        @keyframes levelUp {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+
+            20% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+
+            40% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            80% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .achievement-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card);
+            border: 2px solid var(--accent);
+            border-radius: 1rem;
+            padding: 1rem;
+            z-index: 1000;
+            animation: slideInRight 0.5s ease;
+            max-width: 300px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .xp-float {
+            position: fixed;
+            pointer-events: none;
+            color: var(--accent);
+            font-weight: bold;
+            animation: floatUp 1.5s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            z-index: 999;
+            animation: fall linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        /* Player Card - Now on RIGHT side */
+        .player-card {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, var(--card), var(--card-hover));
+            border: 2px solid var(--accent);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .player-card:hover {
+            width: 260px;
+            height: auto;
+            border-radius: 20px;
+            padding: 20px;
+            align-items: stretch;
+            justify-content: flex-start;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--accent-dim);
+        }
+
+        .player-card-mini {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 56px;
+            flex-shrink: 0;
+            transition: all 0.4s ease;
+        }
+
+        .player-card:hover .player-card-mini {
+            height: auto;
+            margin-bottom: 12px;
+            justify-content: flex-start;
+        }
+
+        .player-card-content {
+            opacity: 0;
+            height: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease, height 0s 0.3s;
+            pointer-events: none;
+        }
+
+        .player-card:hover .player-card-content {
+            opacity: 1;
+            height: auto;
+            transform: translateY(0);
+            transition: opacity 0.4s ease 0.2s, transform 0.4s ease 0.2s, height 0s;
+            pointer-events: auto;
+        }
+
+        .mini-xp-ring {
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: var(--accent);
+            transform: rotate(-45deg);
+            pointer-events: none;
+            transition: all 0.4s ease;
+            opacity: 0.8;
+        }
+
+        .player-card:hover .mini-xp-ring {
+            opacity: 0;
+            transform: scale(1.2) rotate(45deg);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--muted);
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        .month-selector {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px 16px;
+            color: var(--fg);
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer;
+        }
+
+        .month-selector:hover {
+            border-color: var(--accent);
+        }
+
+        .month-stats {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 0.5rem;
+        }
+
+        /* Progressive difficulty toggle switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin-left: 10px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.toggle-slider {
+            background-color: var(--accent);
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .progressive-fields {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .progressive-fields.hidden {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .progressive-fields.visible {
+            max-height: 300px;
+            opacity: 1;
+            margin-top: 1rem;
+        }
+
+        /* Icon picker styling */
+        .icon-btn {
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1);
+            border-color: var(--accent) !important;
+        }
+    </style>
 </head>
+
 <body>
-  <div class="bg-pattern"></div>
-  <div class="grid-overlay"></div>
+    <div class="bg-pattern"></div>
+    <div class="grid-overlay"></div>
 
-  <div class="max-w-6xl mx-auto px-4 py-8 md:py-12">
-    <!-- HEADER -->
-    <header class="mb-10 fade-in">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div>
-          <p class="text-sm uppercase tracking-widest mb-2" style="color: var(--accent);">Daily Progress of Shivam</p>
-          <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Solo Leveling</h1>
+    <div class="max-w-6xl mx-auto px-4 py-8 md:py-12">
+        <!-- Player Stats Card - Now on RIGHT side -->
+        <div id="player-card" class="player-card">
+            <!-- Populated by JavaScript -->
         </div>
-        <div class="flex items-center gap-4">
-          <div class="text-right">
-            <p class="text-sm" style="color: var(--muted);" id="current-date"></p>
-            <p class="text-2xl font-bold font-['Space_Grotesk']" id="greeting"></p>
-          </div>
-          <button class="add-btn" onclick="window.openModal()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Add Habit
-          </button>
-		  
-          <!-- Backup buttons -->
-          <div class="flex flex-wrap gap-2 mt-4 md:mt-0">
-            <button onclick="saveTodayBackup()" class="add-btn" style="background: #4a5b6b; padding: 10px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              📅 Save Today
-            </button>
-            
-            <button onclick="exportAllData()" class="add-btn" style="background: #4a5b6b; padding: 10px;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 5 17 10"/><line x1="12" y1="15" x2="12" y2="5"/>
-              </svg>
-              📊 Export All
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
 
-    <!-- STATS ROW -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-      <div class="stat-card p-5 slide-up stagger-1" style="opacity: 0;">
-        <p class="text-xs uppercase tracking-wider mb-1" style="color: var(--muted);">Today</p>
-        <p class="text-3xl font-bold" id="today-completed">0/0</p>
-        <div class="mt-3 h-1.5 rounded-full overflow-hidden" style="background: var(--border);">
-          <div class="h-full rounded-full transition-all duration-500" style="background: var(--accent); width: 0%;" id="today-progress"></div>
+        <!-- HEADER -->
+        <header class="mb-10 fade-in">
+            <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div>
+                    <p class="text-sm uppercase tracking-widest mb-2" style="color: var(--accent);">Daily Progress of
+                        Shivam</p>
+                    <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Solo Leveling ⚔️</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-sm" style="color: var(--muted);" id="current-date"></p>
+                        <p class="text-2xl font-bold font-['Space_Grotesk']" id="greeting"></p>
+                    </div>
+                    <button class="add-btn" onclick="window.openModal()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add Habit
+                    </button>
+
+                    <!-- Backup buttons -->
+                    <div class="flex flex-wrap gap-2 mt-4 md:mt-0">
+                        <button onclick="saveTodayBackup()" class="add-btn" style="background: #4a5b6b; padding: 10px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            📅 Save Today
+                        </button>
+
+                        <button onclick="exportAllData()" class="add-btn" style="background: #4a5b6b; padding: 10px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 12v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 5 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="5" />
+                            </svg>
+                            📊 Export All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- STATS ROW -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="stat-card p-5 slide-up stagger-1" style="opacity: 0;">
+                <p class="text-xs uppercase tracking-wider mb-1" style="color: var(--muted);">Today</p>
+                <p class="text-3xl font-bold" id="today-completed">0/0</p>
+                <div class="mt-3 h-1.5 rounded-full overflow-hidden" style="background: var(--border);">
+                    <div class="h-full rounded-full transition-all duration-500"
+                        style="background: var(--accent); width: 0%;" id="today-progress"></div>
+                </div>
+            </div>
+            <div class="stat-card p-5 slide-up stagger-2" style="opacity: 0;">
+                <p class="text-xs uppercase tracking-wider mb-1" style="color: var(--muted);">Best Streak</p>
+                <p class="text-3xl font-bold" id="best-streak">0</p>
+                <p class="text-xs mt-1" style="color: var(--muted);">days</p>
+            </div>
+            <div class="stat-card p-5 slide-up stagger-3" style="opacity: 0;">
+                <p class="text-xs uppercase tracking-wider mb-1" style="color: var(--muted);">This Week</p>
+                <p class="text-3xl font-bold" id="week-completion">0%</p>
+                <p class="text-xs mt-1" style="color: var(--muted);">completion rate</p>
+            </div>
+            <div class="stat-card p-5 slide-up stagger-4" style="opacity: 0;">
+                <p class="text-xs uppercase tracking-wider mb-1" style="color: var(--muted);">Total Habits</p>
+                <p class="text-3xl font-bold" id="total-habits">0</p>
+                <p class="text-xs mt-1" style="color: var(--muted);">being tracked</p>
+            </div>
         </div>
-      </div>
-      <div class="stat-card p-5 slide-up stagger-2" style="opacity: 0;">
-        <p class="text-xs uppercase tracking-wider mb-1" style="color: var(--muted);">Best Streak</p>
-        <p class="text-3xl font-bold" id="best-streak">0</p>
-        <p class="text-xs mt-1" style="color: var(--muted);">days</p>
-      </div>
-      <div class="stat-card p-5 slide-up stagger-3" style="opacity: 0;">
-        <p class="text-xs uppercase tracking-wider mb-1" style="color: var(--muted);">This Week</p>
-        <p class="text-3xl font-bold" id="week-completion">0%</p>
-        <p class="text-xs mt-1" style="color: var(--muted);">completion rate</p>
-      </div>
-      <div class="stat-card p-5 slide-up stagger-4" style="opacity: 0;">
-        <p class="text-xs uppercase tracking-wider mb-1" style="color: var(--muted);">Total Habits</p>
-        <p class="text-3xl font-bold" id="total-habits">0</p>
-        <p class="text-xs mt-1" style="color: var(--muted);">being tracked</p>
-      </div>
+
+        <!-- ACHIEVEMENTS SECTION (GAMIFIED) -->
+        <div class="mb-8 slide-up">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <span>🏆</span> Achievements
+                </h2>
+                <span class="text-sm text-muted" id="achievement-count">0/12 unlocked</span>
+            </div>
+            <div class="grid grid-cols-4 md:grid-cols-8 gap-2" id="achievements-container">
+                <!-- Achievements will be populated here -->
+            </div>
+        </div>
+
+        <!-- WEEKLY CHARTS SECTION -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 slide-up" style="opacity: 0; animation-delay: 0.45s;">
+            <div class="chart-card flex flex-col items-center">
+                <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Today's split</h3>
+                <div class="w-full max-w-[160px] mx-auto aspect-square">
+                    <canvas id="pieChart" width="160" height="160"></canvas>
+                </div>
+                <p class="text-xs mt-2" style="color: var(--muted);">completed vs remaining</p>
+            </div>
+            <div class="chart-card flex flex-col items-center">
+                <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">This week</h3>
+                <div class="w-full h-[130px]">
+                    <canvas id="barChart" width="200" height="130"></canvas>
+                </div>
+                <p class="text-xs mt-1" style="color: var(--muted);">completed per day</p>
+            </div>
+            <div class="chart-card flex flex-col items-center">
+                <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Trend (7d)</h3>
+                <div class="w-full h-[130px]">
+                    <canvas id="lineChart" width="200" height="130"></canvas>
+                </div>
+                <p class="text-xs mt-1" style="color: var(--muted);">daily completion %</p>
+            </div>
+        </div>
+
+        <!-- MONTHLY VIEW SECTION -->
+        <div class="mb-8 slide-up" style="opacity: 0; animation-delay: 0.48s;">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Monthly Overview
+                </h2>
+                <div class="flex gap-2">
+                    <select id="monthSelector" class="month-selector" onchange="window.loadMonthData()">
+                        <option value="">Select Month</option>
+                    </select>
+                    <button onclick="window.exportMonthData()" class="add-btn"
+                        style="background: #4a5b6b; padding: 8px 16px;">
+                        📥 Export Month
+                    </button>
+                </div>
+            </div>
+
+            <!-- Monthly Stats Cards -->
+            <div id="monthlyStats" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4" style="display: none;">
+                <div class="month-stats">
+                    <p class="text-xs text-muted mb-1">Days Completed</p>
+                    <p class="text-2xl font-bold" id="monthDaysCompleted">0</p>
+                </div>
+                <div class="month-stats">
+                    <p class="text-xs text-muted mb-1">Completion Rate</p>
+                    <p class="text-2xl font-bold" id="monthCompletionRate">0%</p>
+                </div>
+                <div class="month-stats">
+                    <p class="text-xs text-muted mb-1">Best Day</p>
+                    <p class="text-2xl font-bold" id="monthBestDay">-</p>
+                </div>
+                <div class="month-stats">
+                    <p class="text-xs text-muted mb-1">Total Check-ins</p>
+                    <p class="text-2xl font-bold" id="monthTotalCheckins">0</p>
+                </div>
+            </div>
+
+            <!-- MONTHLY CHARTS SECTION -->
+            <div id="monthlyChartsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6" style="display: none;">
+                <div class="chart-card flex flex-col items-center">
+                    <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Monthly split</h3>
+                    <div class="w-full max-w-[160px] mx-auto aspect-square">
+                        <canvas id="monthlyPieChart" width="160" height="160"></canvas>
+                    </div>
+                    <p class="text-xs mt-2" style="color: var(--muted);" id="monthlyPieLabel">completed vs missed</p>
+                </div>
+                <div class="chart-card flex flex-col items-center">
+                    <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Habit frequency</h3>
+                    <div class="w-full h-[130px]">
+                        <canvas id="monthlyBarChart" width="200" height="130"></canvas>
+                    </div>
+                    <p class="text-xs mt-1" style="color: var(--muted);">completions per habit</p>
+                </div>
+                <div class="chart-card flex flex-col items-center">
+                    <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Daily trend</h3>
+                    <div class="w-full h-[130px]">
+                        <canvas id="monthlyLineChart" width="200" height="130"></canvas>
+                    </div>
+                    <p class="text-xs mt-1" style="color: var(--muted);">completions per day</p>
+                </div>
+            </div>
+
+            <!-- Monthly Calendar -->
+            <div id="monthCalendar" class="grid grid-cols-7 gap-1 p-4"
+                style="background: var(--card); border-radius: 16px; border: 1px solid var(--border);">
+                <!-- Days will be populated here -->
+            </div>
+        </div>
+
+        <!-- WEEK NAVIGATION -->
+        <div class="flex items-center justify-between mb-6 slide-up" style="opacity: 0; animation-delay: 0.5s;">
+            <h2 class="text-xl font-bold">This Week</h2>
+            <div class="flex gap-2" id="week-days"></div>
+        </div>
+
+        <!-- HABITS CONTAINER -->
+        <div class="space-y-4" id="habits-container"></div>
+
+        <!-- EMPTY STATE -->
+        <div class="text-center py-20 slide-up" style="opacity: 0; animation-delay: 0.6s; display: none;"
+            id="empty-state">
+            <div class="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
+                style="background: var(--accent-dim);">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"
+                    stroke-linecap="round">
+                    <path
+                        d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2">No habits yet</h3>
+            <p style="color: var(--muted);" class="mb-6">Start building better habits today</p>
+            <button class="add-btn mx-auto" onclick="window.openModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Create Your First Habit
+            </button>
+        </div>
     </div>
 
-    <!-- WEEKLY CHARTS SECTION -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10 slide-up" style="opacity: 0; animation-delay: 0.45s;">
-      <div class="chart-card flex flex-col items-center">
-        <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Today's split</h3>
-        <div class="w-full max-w-[160px] mx-auto aspect-square">
-          <canvas id="pieChart" width="160" height="160"></canvas>
+    <!-- MODAL - Updated with NEW ICONS -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <h3 class="text-2xl font-bold mb-6">New Habit</h3>
+            <form id="add-habit-form">
+                <div class="mb-4">
+                    <label class="block text-sm mb-2" style="color: var(--muted);">Habit Name</label>
+                    <input type="text" class="input-field" id="habit-name" placeholder="e.g., Drink Water"
+                        autocomplete="off" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm mb-2" style="color: var(--muted);">Icon</label>
+                    <div class="flex gap-2 flex-wrap" id="icon-picker">
+                        <!-- Original icons -->
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--accent); background: var(--accent-dim);" data-icon="fitness"
+                            onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M6.5 6.5h11M6.5 17.5h11M2 12h4M18 12h4M6 6v12M18 6v12" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="book" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="water" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="sleep" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="code" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="16 18 22 12 16 6" />
+                                <polyline points="8 6 2 12 8 18" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="heart" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                        </button>
+                        
+                        <!-- NEW ICONS ADDED HERE -->
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="coffee" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                                <line x1="6" y1="1" x2="6" y2="4" />
+                                <line x1="10" y1="1" x2="10" y2="4" />
+                                <line x1="14" y1="1" x2="14" y2="4" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="meditation" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="8" r="4" />
+                                <path d="M5 20v-2a7 7 0 0 1 14 0v2" />
+                                <path d="M8 12v4" />
+                                <path d="M16 12v4" />
+                                <path d="M12 20v-8" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="running" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="17" cy="4" r="2" />
+                                <path d="M13 10l-2-2-2 2 2 4 2 2-2 4" />
+                                <path d="M7 10l3 3 1-2" />
+                                <path d="M17 16l-3-3 2-4" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="yoga" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="8" r="2" />
+                                <path d="M5 16l3-4 4 4 4-4 3 4" />
+                                <path d="M3 20h18" />
+                                <path d="M12 12v8" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="money" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="2" y="6" width="20" height="12" rx="2" />
+                                <circle cx="12" cy="12" r="2" />
+                                <path d="M6 12h.01M18 12h.01" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="gym" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="4" y="8" width="16" height="8" rx="1" />
+                                <path d="M8 4v4" />
+                                <path d="M16 4v4" />
+                                <path d="M8 16v4" />
+                                <path d="M16 16v4" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="study" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="brain" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 3a3 3 0 0 0-3 3v6.5" />
+                                <path d="M12 3a3 3 0 0 1 3 3v6.5" />
+                                <path d="M6 9a3 3 0 0 0-3 3v3a3 3 0 0 0 3 3" />
+                                <path d="M18 9a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3" />
+                                <path d="M9 21v-3a3 3 0 0 1 6 0v3" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="plant" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 22v-4" />
+                                <path d="M8 8a4 4 0 0 1 8 0v6a4 4 0 0 1-8 0V8z" />
+                                <path d="M4 14h16" />
+                                <path d="M12 2v2" />
+                            </svg>
+                        </button>
+                        <button type="button"
+                            class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all"
+                            style="border-color: var(--border);" data-icon="music" onclick="window.selectIcon(this)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M9 18V5l12-2v13" />
+                                <circle cx="6" cy="18" r="3" />
+                                <circle cx="18" cy="16" r="3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PROGRESSIVE DIFFICULTY TOGGLE -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between">
+                        <label class="text-sm" style="color: var(--muted);">Progressive Difficulty</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="progressive-toggle" onchange="window.toggleProgressiveFields()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <p class="text-xs mt-1" style="color: var(--muted);">Goal increases each day</p>
+                </div>
+
+                <!-- PROGRESSIVE FIELDS (hidden by default) -->
+                <div id="progressive-fields" class="progressive-fields hidden">
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs mb-1" style="color: var(--muted);">Start Value</label>
+                            <input type="number" id="start-value" class="input-field" step="0.1" min="0" value="1.0">
+                        </div>
+                        <div>
+                            <label class="block text-xs mb-1" style="color: var(--muted);">Unit</label>
+                            <select id="unit" class="input-field">
+                                <option value="Liters">Liters</option>
+                                <option value="km">km</option>
+                                <option value="pages">pages</option>
+                                <option value="minutes">minutes</option>
+                                <option value="reps">reps</option>
+                                <option value="servings">servings</option>
+                                <option value="glasses">glasses</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs mb-1" style="color: var(--muted);">Increment per day</label>
+                            <input type="number" id="increment" class="input-field" step="0.1" min="0.1" value="0.5">
+                        </div>
+                        <div>
+                            <label class="block text-xs mb-1" style="color: var(--muted);">Maximum Value</label>
+                            <input type="number" id="max-value" class="input-field" step="0.1" min="0" value="3.0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs mb-1" style="color: var(--muted);">Example progression:</label>
+                        <div class="text-xs p-2 rounded" style="background: var(--bg-secondary);" id="example-progression">
+                            Day 1: 1.0 Liters → Day 2: 1.5 Liters → Day 3: 2.0 Liters
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-4">
+                    <button type="button" class="flex-1 py-3 rounded-xl font-semibold transition-all"
+                        style="background: var(--bg-secondary); border: 1px solid var(--border);"
+                        onclick="window.closeModal()">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 rounded-xl font-semibold transition-all"
+                        style="background: var(--accent); color: var(--bg);">Add Habit</button>
+                </div>
+            </form>
         </div>
-        <p class="text-xs mt-2" style="color: var(--muted);">completed vs remaining</p>
-      </div>
-      <div class="chart-card flex flex-col items-center">
-        <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">This week</h3>
-        <div class="w-full h-[130px]">
-          <canvas id="barChart" width="200" height="130"></canvas>
-        </div>
-        <p class="text-xs mt-1" style="color: var(--muted);">completed per day</p>
-      </div>
-      <div class="chart-card flex flex-col items-center">
-        <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Trend (7d)</h3>
-        <div class="w-full h-[130px]">
-          <canvas id="lineChart" width="200" height="130"></canvas>
-        </div>
-        <p class="text-xs mt-1" style="color: var(--muted);">daily completion %</p>
-      </div>
     </div>
 
-    <!-- MONTHLY VIEW SECTION (WITH CHARTS) -->
-    <div class="mb-8 slide-up" style="opacity: 0; animation-delay: 0.48s;">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-        <h2 class="text-xl font-bold flex items-center gap-2">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-          Monthly Overview
-        </h2>
-        <div class="flex gap-2">
-          <select id="monthSelector" class="month-selector" onchange="window.loadMonthData()">
-            <option value="">Select Month</option>
-          </select>
-          <button onclick="window.exportMonthData()" class="add-btn" style="background: #4a5b6b; padding: 8px 16px;">
-            📥 Export Month
-          </button>
-        </div>
-      </div>
-      
-      <!-- Monthly Stats Cards -->
-      <div id="monthlyStats" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4" style="display: none;">
-        <div class="month-stats">
-          <p class="text-xs text-muted mb-1">Days Completed</p>
-          <p class="text-2xl font-bold" id="monthDaysCompleted">0</p>
-        </div>
-        <div class="month-stats">
-          <p class="text-xs text-muted mb-1">Completion Rate</p>
-          <p class="text-2xl font-bold" id="monthCompletionRate">0%</p>
-        </div>
-        <div class="month-stats">
-          <p class="text-xs text-muted mb-1">Best Day</p>
-          <p class="text-2xl font-bold" id="monthBestDay">-</p>
-        </div>
-        <div class="month-stats">
-          <p class="text-xs text-muted mb-1">Total Check-ins</p>
-          <p class="text-2xl font-bold" id="monthTotalCheckins">0</p>
-        </div>
-      </div>
-      
-      <!-- MONTHLY CHARTS SECTION (NEW) -->
-      <div id="monthlyChartsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6" style="display: none;">
-        <!-- Monthly Pie Chart -->
-        <div class="chart-card flex flex-col items-center">
-          <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Monthly split</h3>
-          <div class="w-full max-w-[160px] mx-auto aspect-square">
-            <canvas id="monthlyPieChart" width="160" height="160"></canvas>
-          </div>
-          <p class="text-xs mt-2" style="color: var(--muted);" id="monthlyPieLabel">completed vs missed</p>
-        </div>
+    <script>
+        (function () {
+            "use strict";
 
-        <!-- Monthly Bar Chart -->
-        <div class="chart-card flex flex-col items-center">
-          <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Habit frequency</h3>
-          <div class="w-full h-[130px]">
-            <canvas id="monthlyBarChart" width="200" height="130"></canvas>
-          </div>
-          <p class="text-xs mt-1" style="color: var(--muted);">completions per habit</p>
-        </div>
+            // ===== GAMIFICATION SYSTEM =====
+            window.player = {
+                xp: parseInt(localStorage.getItem('playerXP')) || 0,
+                level: parseInt(localStorage.getItem('playerLevel')) || 1,
+                achievements: JSON.parse(localStorage.getItem('achievements')) || [],
+                totalCompletions: parseInt(localStorage.getItem('totalCompletions')) || 0,
+                dailyBonusClaimed: localStorage.getItem('dailyBonusClaimed') === 'true' ? true : false,
+                lastDailyReset: localStorage.getItem('lastDailyReset') || new Date().toISOString().split('T')[0]
+            };
 
-        <!-- Monthly Line Chart -->
-        <div class="chart-card flex flex-col items-center">
-          <h3 class="text-sm uppercase tracking-wider mb-2" style="color: var(--accent);">Daily trend</h3>
-          <div class="w-full h-[130px]">
-            <canvas id="monthlyLineChart" width="200" height="130"></canvas>
-          </div>
-          <p class="text-xs mt-1" style="color: var(--muted);">completions per day</p>
-        </div>
-      </div>
-      
-      <!-- Monthly Calendar -->
-      <div id="monthCalendar" class="grid grid-cols-7 gap-1 p-4" style="background: var(--card); border-radius: 16px; border: 1px solid var(--border);">
-        <!-- Days will be populated here -->
-      </div>
-    </div>
+            // Level thresholds (XP needed)
+            const levelThresholds = {
+                1: 0,
+                2: 100,
+                3: 300,
+                4: 600,
+                5: 1000,
+                6: 1500,
+                7: 2200,
+                8: 3000,
+                9: 4000,
+                10: 5000,
+                11: 6200,
+                12: 7600,
+                13: 9200,
+                14: 11000,
+                15: 13000
+            };
 
-    <!-- WEEK NAVIGATION -->
-    <div class="flex items-center justify-between mb-6 slide-up" style="opacity: 0; animation-delay: 0.5s;">
-      <h2 class="text-xl font-bold">This Week</h2>
-      <div class="flex gap-2" id="week-days"></div>
-    </div>
+            // Achievement definitions
+            const achievements = {
+                firstStep: { id: 'firstStep', name: 'First Step', desc: 'Complete your first habit', xpReward: 50, icon: '👣', emoji: '👣' },
+                weekWarrior: { id: 'weekWarrior', name: 'Week Warrior', desc: '7 day streak', xpReward: 200, icon: '🔥', emoji: '🔥' },
+                monthlyMaster: { id: 'monthlyMaster', name: 'Monthly Master', desc: '30 day streak', xpReward: 500, icon: '👑', emoji: '👑' },
+                perfectWeek: { id: 'perfectWeek', name: 'Perfect Week', desc: 'Complete all habits for 7 days', xpReward: 300, icon: '⭐', emoji: '⭐' },
+                habitHero: { id: 'habitHero', name: 'Habit Hero', desc: 'Complete 100 habits total', xpReward: 400, icon: '🦸', emoji: '🦸' },
+                levelUp5: { id: 'level5', name: 'Elite Warrior', desc: 'Reach Level 5', xpReward: 200, icon: '⚔️', emoji: '⚔️' },
+                levelUp10: { id: 'level10', name: 'Grand Master', desc: 'Reach Level 10', xpReward: 500, icon: '👑', emoji: '👑' },
+                levelUp15: { id: 'level15', name: 'Solo Leveling', desc: 'Reach Level 15', xpReward: 1000, icon: '🐉', emoji: '🐉' },
+                perfectDay: { id: 'perfectDay', name: 'Perfect Day', desc: 'Complete all habits in one day', xpReward: 100, icon: '🌟', emoji: '🌟' },
+                tripleThreat: { id: 'tripleThreat', name: 'Triple Threat', desc: 'Complete 3 habits in one day', xpReward: 50, icon: '⚡', emoji: '⚡' },
+                veteran: { id: 'veteran', name: 'Veteran', desc: 'Complete 500 habits total', xpReward: 1000, icon: '🎖️', emoji: '🎖️' },
+                legendary: { id: 'legendary', name: 'Legendary', desc: 'Complete 1000 habits total', xpReward: 2000, icon: '🏆', emoji: '🏆' }
+            };
 
-    <!-- HABITS CONTAINER -->
-    <div class="space-y-4" id="habits-container"></div>
+            // Level titles and icons
+            const levelTitles = {
+                1: 'Novice', 2: 'Apprentice', 3: 'Warrior', 4: 'Elite', 5: 'Master',
+                6: 'Grand Master', 7: 'Legend', 8: 'Mythic', 9: 'Divine', 10: 'Solo Leveling',
+                11: 'Shadow Monarch', 12: 'Demon King', 13: 'God Slayer', 14: 'Immortal', 15: 'God'
+            };
 
-    <!-- EMPTY STATE -->
-    <div class="text-center py-20 slide-up" style="opacity: 0; animation-delay: 0.6s; display: none;" id="empty-state">
-      <div class="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center" style="background: var(--accent-dim);">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round">
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-        </svg>
-      </div>
-      <h3 class="text-xl font-bold mb-2">No habits yet</h3>
-      <p style="color: var(--muted);" class="mb-6">Start building better habits today</p>
-      <button class="add-btn mx-auto" onclick="window.openModal()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Create Your First Habit
-      </button>
-    </div>
-  </div>
+            const levelIcons = {
+                1: '🟫', 2: '🟩', 3: '🟦', 4: '🟪', 5: '🟥',
+                6: '👑', 7: '⚔️', 8: '🛡️', 9: '🐉', 10: '⭐',
+                11: '🌑', 12: '👹', 13: '⚡', 14: '🔥', 15: '✨'
+            };
 
-  <!-- MODAL -->
-  <div class="modal-overlay" id="modal">
-    <div class="modal">
-      <h3 class="text-2xl font-bold mb-6">New Habit</h3>
-      <form id="add-habit-form">
-        <div class="mb-4">
-          <label class="block text-sm mb-2" style="color: var(--muted);">Habit Name</label>
-          <input type="text" class="input-field" id="habit-name" placeholder="e.g., Morning meditation" autocomplete="off" required>
-        </div>
-        <div class="mb-6">
-          <label class="block text-sm mb-2" style="color: var(--muted);">Icon</label>
-          <div class="flex gap-2 flex-wrap" id="icon-picker">
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--accent); background: var(--accent-dim);" data-icon="fitness" onclick="window.selectIcon(this)">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M2 12h4M18 12h4M6 6v12M18 6v12"/></svg>
-            </button>
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="book" onclick="window.selectIcon(this)">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            </button>
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="water" onclick="window.selectIcon(this)">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-            </button>
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="sleep" onclick="window.selectIcon(this)">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            </button>
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="code" onclick="window.selectIcon(this)">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-            </button>
-            <button type="button" class="icon-btn w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all" style="border-color: var(--border);" data-icon="heart" onclick="window.selectIcon(this)">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="flex gap-3">
-          <button type="button" class="flex-1 py-3 rounded-xl font-semibold transition-all" style="background: var(--bg-secondary); border: 1px solid var(--border);" onclick="window.closeModal()">Cancel</button>
-          <button type="submit" class="flex-1 py-3 rounded-xl font-semibold transition-all" style="background: var(--accent); color: var(--bg);">Add Habit</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    (function() {
-      "use strict";
-
-      // ----- GLOBAL VARIABLES -----
-      window.habits = JSON.parse(localStorage.getItem('habits')) || [];
-      window.selectedIcon = 'fitness';
-      const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-      // Chart instances
-      window.pieChart = null;
-      window.barChart = null;
-      window.lineChart = null;
-      window.monthlyPieChart = null;
-      window.monthlyBarChart = null;
-      window.monthlyLineChart = null;
-
-      const icons = {
-        fitness: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M2 12h4M18 12h4M6 6v12M18 6v12"/></svg>',
-        book: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
-        water: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
-        sleep: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
-        code: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
-        heart: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
-      };
-
-      // ----- BACKUP FUNCTIONS -----
-      window.saveTodayBackup = function() {
-        const today = new Date().toISOString().slice(0,10);
-        const now = new Date().toLocaleTimeString().replace(/:/g, '-');
-        
-        const backupData = {
-          date: today,
-          time: new Date().toLocaleTimeString(),
-          totalHabits: window.habits.length,
-          completedToday: window.habits.filter(h => h.completedDates.includes(today)).length,
-          habits: window.habits,
-          stats: {
-            bestStreak: document.getElementById('best-streak').textContent,
-            weekCompletion: document.getElementById('week-completion').textContent
-          }
-        };
-        
-        const data = JSON.stringify(backupData, null, 2);
-        const blob = new Blob([data], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `myhabbit_${today}_${now}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        alert(`✅ Today's data saved!`);
-      };
-
-      window.exportAllData = function() {
-        const dataByMonth = {};
-        
-        window.habits.forEach(habit => {
-          habit.completedDates.forEach(date => {
-            const month = date.slice(0,7);
-            if (!dataByMonth[month]) {
-              dataByMonth[month] = { month: month, habits: {} };
-            }
-            if (!dataByMonth[month].habits[habit.name]) {
-              dataByMonth[month].habits[habit.name] = [];
-            }
-            dataByMonth[month].habits[habit.name].push(date);
-          });
-        });
-        
-        const fullExport = {
-          exportDate: new Date().toISOString(),
-          totalHabits: window.habits.length,
-          monthsOfData: Object.keys(dataByMonth),
-          monthlyData: dataByMonth,
-          rawHabits: window.habits
-        };
-        
-        const data = JSON.stringify(fullExport, null, 2);
-        const blob = new Blob([data], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `myhabbit_full_export_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      };
-
-      // ----- MONTHLY VIEW FUNCTIONS (WITH CHARTS) -----
-      window.populateMonthSelector = function() {
-        const months = new Set();
-        window.habits.forEach(habit => {
-          habit.completedDates.forEach(date => {
-            months.add(date.slice(0,7));
-          });
-        });
-        
-        // Add current month even if no data
-        months.add(new Date().toISOString().slice(0,7));
-        
-        const sortedMonths = Array.from(months).sort().reverse();
-        const selector = document.getElementById('monthSelector');
-        selector.innerHTML = '<option value="">Select Month</option>';
-        
-        sortedMonths.forEach(month => {
-          const [year, monthNum] = month.split('-');
-          const option = document.createElement('option');
-          option.value = month;
-          option.textContent = `${monthNames[parseInt(monthNum)-1]} ${year}`;
-          selector.appendChild(option);
-        });
-      };
-
-      window.loadMonthData = function() {
-        const month = document.getElementById('monthSelector').value;
-        if (!month) {
-          document.getElementById('monthlyStats').style.display = 'none';
-          document.getElementById('monthlyChartsContainer').style.display = 'none';
-          document.getElementById('monthCalendar').innerHTML = '<!-- Days will be populated here -->';
-          return;
-        }
-
-        // Get days in month
-        const [year, monthNum] = month.split('-');
-        const daysInMonth = new Date(year, monthNum, 0).getDate();
-        const firstDay = new Date(year, monthNum-1, 1).getDay(); // 0 = Sunday
-        
-        // Calculate statistics
-        let totalCheckins = 0;
-        const dailyCompletions = {};
-        const habitCompletions = {};
-        
-        // Initialize habit completions
-        window.habits.forEach(habit => {
-          habitCompletions[habit.name] = 0;
-        });
-        
-        window.habits.forEach(habit => {
-          habit.completedDates.forEach(date => {
-            if (date.startsWith(month)) {
-              totalCheckins++;
-              dailyCompletions[date] = (dailyCompletions[date] || 0) + 1;
-              habitCompletions[habit.name] = (habitCompletions[habit.name] || 0) + 1;
-            }
-          });
-        });
-
-        // Find best day
-        let bestDay = { date: '', count: 0 };
-        Object.entries(dailyCompletions).forEach(([date, count]) => {
-          if (count > bestDay.count) {
-            bestDay = { date, count };
-          }
-        });
-
-        // Calculate completion rate
-        const daysWithData = Object.keys(dailyCompletions).length;
-        const completionRate = Math.round((daysWithData / daysInMonth) * 100);
-
-        // Update stats display
-        document.getElementById('monthDaysCompleted').textContent = daysWithData;
-        document.getElementById('monthCompletionRate').textContent = `${completionRate}%`;
-        document.getElementById('monthBestDay').textContent = bestDay.date ? bestDay.date.slice(-2) + ' (' + bestDay.count + ')' : '-';
-        document.getElementById('monthTotalCheckins').textContent = totalCheckins;
-        document.getElementById('monthlyStats').style.display = 'grid';
-        document.getElementById('monthlyChartsContainer').style.display = 'grid';
-
-        // Update monthly charts
-        updateMonthlyCharts(month, dailyCompletions, habitCompletions, daysInMonth);
-        
-        // Generate calendar
-        generateMonthCalendar(month, daysInMonth, firstDay, dailyCompletions);
-      };
-
-      function updateMonthlyCharts(month, dailyCompletions, habitCompletions, daysInMonth) {
-        const totalHabits = window.habits.length;
-        const daysWithData = Object.keys(dailyCompletions).length;
-        const daysMissed = daysInMonth - daysWithData;
-        
-        // Monthly Pie Chart - Days completed vs missed
-        const pieCtx = document.getElementById('monthlyPieChart')?.getContext('2d');
-        if (pieCtx) {
-          if (window.monthlyPieChart) window.monthlyPieChart.destroy();
-          window.monthlyPieChart = new Chart(pieCtx, {
-            type: 'pie',
-            data: {
-              labels: ['Days with progress', 'Days missed'],
-              datasets: [{
-                data: [daysWithData, daysMissed],
-                backgroundColor: ['#00d4aa', '#2a3a4a'],
-                borderColor: 'transparent',
-              }]
-            },
-            options: { 
-              responsive: true, 
-              maintainAspectRatio: true,
-              plugins: { legend: { display: false } }
-            }
-          });
-          document.getElementById('monthlyPieLabel').textContent = `${daysWithData} days active`;
-        }
-
-        // Monthly Bar Chart - Completions per habit
-        const barCtx = document.getElementById('monthlyBarChart')?.getContext('2d');
-        if (barCtx) {
-          if (window.monthlyBarChart) window.monthlyBarChart.destroy();
-          window.monthlyBarChart = new Chart(barCtx, {
-            type: 'bar',
-            data: {
-              labels: Object.keys(habitCompletions).map(name => name.length > 8 ? name.substring(0,6)+'..' : name),
-              datasets: [{
-                label: 'completions',
-                data: Object.values(habitCompletions),
-                backgroundColor: '#00d4aa',
-                borderRadius: 6,
-                barPercentage: 0.6,
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: true,
-              scales: { 
-                y: { 
-                  beginAtZero: true, 
-                  grid: { color: 'rgba(255,255,255,0.05)' }, 
-                  ticks: { color: '#6b7d8f' } 
-                },
-                x: { ticks: { color: '#6b7d8f', maxRotation: 45, minRotation: 45 } }
-              },
-              plugins: { legend: { display: false } }
-            }
-          });
-        }
-
-        // Monthly Line Chart - Daily completion trend
-        const days = [];
-        const completionCounts = [];
-        for (let day = 1; day <= daysInMonth; day++) {
-          const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
-          days.push(day);
-          completionCounts.push(dailyCompletions[dateStr] || 0);
-        }
-
-        const lineCtx = document.getElementById('monthlyLineChart')?.getContext('2d');
-        if (lineCtx) {
-          if (window.monthlyLineChart) window.monthlyLineChart.destroy();
-          window.monthlyLineChart = new Chart(lineCtx, {
-            type: 'line',
-            data: {
-              labels: days.filter((_, i) => i % 5 === 0), // Show every 5th day label
-              datasets: [{
-                label: 'completions',
-                data: completionCounts,
-                borderColor: '#00d4aa',
-                backgroundColor: 'rgba(0,212,170,0.1)',
-                borderWidth: 2,
-                pointBackgroundColor: '#00d4aa',
-                pointBorderColor: '#0a0f14',
-                pointBorderWidth: 1,
-                pointRadius: 2,
-                pointHoverRadius: 4,
-                tension: 0.2,
-                fill: true
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: true,
-              scales: { 
-                y: { 
-                  beginAtZero: true, 
-                  max: totalHabits,
-                  grid: { color: 'rgba(255,255,255,0.05)' }, 
-                  ticks: { color: '#6b7d8f' } 
-                },
-                x: { 
-                  ticks: { color: '#6b7d8f' },
-                  title: { display: true, text: 'Day of month', color: '#6b7d8f' }
+            // ----- PROGRESSIVE DIFFICULTY FUNCTIONS -----
+            window.toggleProgressiveFields = function () {
+                const toggle = document.getElementById('progressive-toggle');
+                const fields = document.getElementById('progressive-fields');
+                if (toggle.checked) {
+                    fields.classList.remove('hidden');
+                    fields.classList.add('visible');
+                    updateExampleProgression();
+                } else {
+                    fields.classList.remove('visible');
+                    fields.classList.add('hidden');
                 }
-              },
-              plugins: { legend: { display: false } }
-            }
-          });
-        }
-      }
+            };
 
-      function generateMonthCalendar(month, daysInMonth, firstDay, dailyCompletions) {
-        const calendar = document.getElementById('monthCalendar');
-        const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const totalHabits = window.habits.length;
-        
-        let html = '';
-        
-        // Add weekday headers
-        weekDays.forEach(day => {
-          html += `<div class="text-center text-xs mb-2" style="color: var(--muted);">${day}</div>`;
-        });
-        
-        // Add empty cells for days before month starts
-        for (let i = 0; i < firstDay; i++) {
-          html += `<div class="text-center p-2"></div>`;
-        }
-        
-        // Add days of month
-        for (let day = 1; day <= daysInMonth; day++) {
-          const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
-          const completed = dailyCompletions[dateStr] || 0;
-          const intensity = totalHabits > 0 ? (completed / totalHabits) * 100 : 0;
-          
-          let bgColor = 'var(--card)';
-          if (completed > 0) {
-            if (intensity >= 75) bgColor = '#00d4aa';
-            else if (intensity >= 50) bgColor = '#00b894';
-            else if (intensity >= 25) bgColor = '#00a37a';
-            else bgColor = '#1a5a4a';
-          }
-          
-          html += `
+            function updateExampleProgression() {
+                const start = parseFloat(document.getElementById('start-value')?.value) || 1.0;
+                const increment = parseFloat(document.getElementById('increment')?.value) || 0.5;
+                const unit = document.getElementById('unit')?.value || 'Liters';
+                const exampleDiv = document.getElementById('example-progression');
+                if (exampleDiv) {
+                    exampleDiv.innerHTML = `Day 1: ${start} ${unit} → Day 2: ${(start + increment).toFixed(1)} ${unit} → Day 3: ${(start + increment * 2).toFixed(1)} ${unit}`;
+                }
+            }
+
+            // Calculate today's goal for progressive habit
+            function calculateTodaysGoal(habit) {
+                if (!habit.progressive) return null;
+                
+                // Count how many times this habit has been completed
+                const completionCount = habit.completedDates.length;
+                const todayGoal = habit.startValue + (habit.increment * completionCount);
+                
+                // Cap at maximum value
+                return Math.min(todayGoal, habit.maxValue);
+            }
+
+            // Calculate progress percentage towards today's goal (for display)
+            function calculateProgressPercentage(habit) {
+                if (!habit.progressive) return 0;
+                
+                const todayGoal = calculateTodaysGoal(habit);
+                if (!todayGoal) return 0;
+                
+                // For now, we just show 0% until we add tracking of actual progress
+                // You could add a "current amount" field if you want to track partial progress
+                return 0;
+            }
+
+            // Check if habit has reached maximum
+            function hasReachedMax(habit) {
+                if (!habit.progressive) return false;
+                const todayGoal = calculateTodaysGoal(habit);
+                return todayGoal >= habit.maxValue;
+            }
+
+            // ----- GAMIFICATION FUNCTIONS -----
+            window.addXP = function (amount, reason) {
+                window.player.xp += amount;
+                window.player.totalCompletions += amount > 0 ? 1 : 0;
+
+                // Show floating XP
+                showFloatingXP(amount, reason);
+
+                // Check for level up
+                const newLevel = calculateLevel(window.player.xp);
+                if (newLevel > window.player.level) {
+                    const oldLevel = window.player.level;
+                    window.player.level = newLevel;
+                    showLevelUp(oldLevel, newLevel);
+
+                    // Check level achievements
+                    if (newLevel >= 5) unlockAchievement('levelUp5');
+                    if (newLevel >= 10) unlockAchievement('levelUp10');
+                    if (newLevel >= 15) unlockAchievement('levelUp15');
+
+                    // Add confetti celebration
+                    createConfetti(50);
+                }
+
+                // Check for veteran achievements
+                if (window.player.totalCompletions >= 100) unlockAchievement('habitHero');
+                if (window.player.totalCompletions >= 500) unlockAchievement('veteran');
+                if (window.player.totalCompletions >= 1000) unlockAchievement('legendary');
+
+                savePlayerData();
+                updatePlayerUI();
+                renderAchievements();
+            };
+
+            function calculateLevel(xp) {
+                let level = 1;
+                for (let i = 2; i <= 15; i++) {
+                    if (xp >= levelThresholds[i]) level = i;
+                }
+                return level;
+            }
+
+            function showLevelUp(oldLevel, newLevel) {
+                const levelUpDiv = document.createElement('div');
+                levelUpDiv.className = 'level-up-popup';
+                levelUpDiv.innerHTML = `
+          <div class="text-6xl mb-4">⬆️</div>
+          <h2 class="text-4xl font-bold mb-2">LEVEL UP!</h2>
+          <p class="text-2xl">${oldLevel} → ${newLevel}</p>
+          <p class="text-xl mt-2">${levelTitles[newLevel]}</p>
+          <p class="text-sm mt-4">+${levelThresholds[newLevel] - levelThresholds[oldLevel]} XP</p>
+        `;
+                document.body.appendChild(levelUpDiv);
+
+                // Remove after animation
+                setTimeout(() => levelUpDiv.remove(), 2000);
+            }
+
+            function unlockAchievement(achievementId) {
+                const achievement = achievements[achievementId];
+                if (!achievement || window.player.achievements.includes(achievementId)) return false;
+
+                window.player.achievements.push(achievementId);
+
+                // Show achievement popup
+                const achievementDiv = document.createElement('div');
+                achievementDiv.className = 'achievement-popup';
+                achievementDiv.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="text-4xl">${achievement.emoji}</span>
+            <div>
+              <p class="text-xs text-accent mb-1">Achievement Unlocked!</p>
+              <p class="font-bold">${achievement.name}</p>
+              <p class="text-xs text-muted">${achievement.desc}</p>
+              <p class="text-xs text-accent mt-1">+${achievement.xpReward} XP</p>
+            </div>
+          </div>
+        `;
+                document.body.appendChild(achievementDiv);
+
+                // Add XP reward
+                window.addXP(achievement.xpReward, `Achievement: ${achievement.name}`);
+
+                // Remove popup after 4 seconds
+                setTimeout(() => achievementDiv.remove(), 4000);
+
+                // Create mini confetti
+                createConfetti(20);
+
+                savePlayerData();
+                return true;
+            }
+
+            function showFloatingXP(amount, reason) {
+                const xpDiv = document.createElement('div');
+                xpDiv.className = 'xp-float';
+                xpDiv.style.left = Math.random() * 80 + 10 + '%';
+                xpDiv.style.bottom = '20px';
+                xpDiv.innerHTML = `
+          <div class="text-center">
+            <div class="text-2xl">✨</div>
+            <div class="font-bold">+${amount}</div>
+            <div class="text-xs">${reason}</div>
+          </div>
+        `;
+                document.body.appendChild(xpDiv);
+                setTimeout(() => xpDiv.remove(), 1500);
+            }
+
+            function createConfetti(count) {
+                for (let i = 0; i < count; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.top = '-10px';
+                    confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = confetti.style.width;
+                    confetti.style.animationDuration = Math.random() * 2 + 2 + 's';
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 5000);
+                }
+            }
+
+            function updatePlayerUI() {
+                const playerCard = document.getElementById('player-card');
+                if (!playerCard) return;
+
+                const nextLevelXP = levelThresholds[window.player.level + 1] || levelThresholds[window.player.level] + 1000;
+                const currentLevelXP = levelThresholds[window.player.level];
+                const xpProgress = ((window.player.xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
+                const xpNeeded = nextLevelXP - window.player.xp;
+
+                playerCard.innerHTML = `
+                    <div class="mini-xp-ring" style="border-top-color: var(--accent); transform: rotate(${xpProgress * 3.6 - 45}deg);"></div>
+                    <div class="player-card-mini">
+                        <span class="text-3xl">${levelIcons[window.player.level]}</span>
+                        <div class="ml-3 hidden sm:block md:hidden"> <!-- Only shown when expanded --> </div>
+                        <div class="player-card-content flex-1 ml-3">
+                            <p class="text-sm text-accent leading-none">Level ${window.player.level}</p>
+                            <p class="font-bold text-lg leading-tight">${levelTitles[window.player.level]}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="player-card-content">
+                        <div class="mb-3">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>${window.player.xp} XP</span>
+                                <span>${xpNeeded > 0 ? xpNeeded + ' to next' : 'MAX'}</span>
+                            </div>
+                            <div class="w-full h-2 bg-border rounded-full overflow-hidden">
+                                <div class="h-full bg-accent rounded-full transition-all duration-500" style="width: ${Math.min(xpProgress, 100)}%"></div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-xs pt-2 border-t border-border">
+                            <span class="flex items-center gap-1">⚔️ <b>${window.player.totalCompletions}</b> deeds</span>
+                            <span class="flex items-center gap-1">🏆 <b>${window.player.achievements.length}</b>/${Object.keys(achievements).length}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderAchievements() {
+                const container = document.getElementById('achievements-container');
+                const countSpan = document.getElementById('achievement-count');
+                if (!container) return;
+
+                let html = '';
+                Object.values(achievements).forEach(achievement => {
+                    const unlocked = window.player.achievements.includes(achievement.id);
+                    html += `
+            <div class="relative group">
+              <div class="text-center p-2 rounded-lg transition-all ${unlocked ? 'bg-accent-dim' : 'opacity-30 grayscale'}" 
+                   title="${achievement.desc}">
+                <span class="text-2xl">${achievement.emoji}</span>
+                <p class="text-xs mt-1 truncate">${achievement.name}</p>
+              </div>
+              ${unlocked ? '' : `
+                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span class="text-xs text-white">🔒</span>
+                </div>
+              `}
+            </div>
+          `;
+                });
+                container.innerHTML = html;
+                if (countSpan) {
+                    countSpan.textContent = `${window.player.achievements.length}/${Object.keys(achievements).length} unlocked`;
+                }
+            }
+
+            function savePlayerData() {
+                localStorage.setItem('playerXP', window.player.xp);
+                localStorage.setItem('playerLevel', window.player.level);
+                localStorage.setItem('achievements', JSON.stringify(window.player.achievements));
+                localStorage.setItem('totalCompletions', window.player.totalCompletions);
+                localStorage.setItem('dailyBonusClaimed', window.player.dailyBonusClaimed);
+                localStorage.setItem('lastDailyReset', window.player.lastDailyReset);
+            }
+
+            // Reset daily bonus at midnight
+            function checkDailyReset() {
+                const today = new Date().toISOString().split('T')[0];
+                if (window.player.lastDailyReset !== today) {
+                    window.player.dailyBonusClaimed = false;
+                    window.player.lastDailyReset = today;
+                    savePlayerData();
+                }
+            }
+
+            // Check for daily bonus
+            function checkDailyBonus() {
+                const today = new Date().toISOString().split('T')[0];
+                const allCompleted = window.habits.length > 0 && window.habits.every(h => h.completedDates.includes(today));
+
+                if (allCompleted && !window.player.dailyBonusClaimed) {
+                    window.addXP(50, 'Daily bonus (all habits)');
+                    window.player.dailyBonusClaimed = true;
+                    savePlayerData();
+
+                    // Check for perfect day achievement
+                    unlockAchievement('perfectDay');
+
+                    // Check for triple threat (if at least 3 habits)
+                    if (window.habits.length >= 3) {
+                        unlockAchievement('tripleThreat');
+                    }
+                }
+            }
+
+            // Check for streak achievements
+            function checkStreakAchievements() {
+                window.habits.forEach(habit => {
+                    const streak = calculateStreak(habit);
+                    if (streak >= 7) unlockAchievement('weekWarrior');
+                    if (streak >= 30) unlockAchievement('monthlyMaster');
+                });
+            }
+
+            // Check for perfect week
+            function checkPerfectWeek() {
+                const dates = getWeekDates();
+                const allDaysPerfect = dates.every(date =>
+                    window.habits.length > 0 && window.habits.every(h => h.completedDates.includes(date))
+                );
+                if (allDaysPerfect) unlockAchievement('perfectWeek');
+            }
+
+            // ----- BACKUP FUNCTIONS -----
+            window.saveTodayBackup = function () {
+                const today = new Date().toISOString().slice(0, 10);
+                const now = new Date().toLocaleTimeString().replace(/:/g, '-');
+
+                const backupData = {
+                    date: today,
+                    time: new Date().toLocaleTimeString(),
+                    totalHabits: window.habits.length,
+                    completedToday: window.habits.filter(h => h.completedDates.includes(today)).length,
+                    habits: window.habits,
+                    player: window.player,
+                    stats: {
+                        bestStreak: document.getElementById('best-streak').textContent,
+                        weekCompletion: document.getElementById('week-completion').textContent
+                    }
+                };
+
+                const data = JSON.stringify(backupData, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `myhabbit_${today}_${now}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                alert(`✅ Today's data saved!`);
+            };
+
+            window.exportAllData = function () {
+                const dataByMonth = {};
+
+                window.habits.forEach(habit => {
+                    habit.completedDates.forEach(date => {
+                        const month = date.slice(0, 7);
+                        if (!dataByMonth[month]) {
+                            dataByMonth[month] = { month: month, habits: {} };
+                        }
+                        if (!dataByMonth[month].habits[habit.name]) {
+                            dataByMonth[month].habits[habit.name] = [];
+                        }
+                        dataByMonth[month].habits[habit.name].push(date);
+                    });
+                });
+
+                const fullExport = {
+                    exportDate: new Date().toISOString(),
+                    totalHabits: window.habits.length,
+                    player: window.player,
+                    monthsOfData: Object.keys(dataByMonth),
+                    monthlyData: dataByMonth,
+                    rawHabits: window.habits
+                };
+
+                const data = JSON.stringify(fullExport, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `myhabbit_full_export_${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            // ----- MONTHLY VIEW FUNCTIONS -----
+            window.populateMonthSelector = function () {
+                const months = new Set();
+                window.habits.forEach(habit => {
+                    habit.completedDates.forEach(date => {
+                        months.add(date.slice(0, 7));
+                    });
+                });
+
+                months.add(new Date().toISOString().slice(0, 7));
+
+                const sortedMonths = Array.from(months).sort().reverse();
+                const selector = document.getElementById('monthSelector');
+                selector.innerHTML = '<option value="">Select Month</option>';
+
+                sortedMonths.forEach(month => {
+                    const [year, monthNum] = month.split('-');
+                    const option = document.createElement('option');
+                    option.value = month;
+                    option.textContent = `${monthNames[parseInt(monthNum) - 1]} ${year}`;
+                    selector.appendChild(option);
+                });
+            };
+
+            window.loadMonthData = function () {
+                const month = document.getElementById('monthSelector').value;
+                if (!month) {
+                    document.getElementById('monthlyStats').style.display = 'none';
+                    document.getElementById('monthlyChartsContainer').style.display = 'none';
+                    document.getElementById('monthCalendar').innerHTML = '<!-- Days will be populated here -->';
+                    return;
+                }
+
+                const [year, monthNum] = month.split('-');
+                const daysInMonth = new Date(year, monthNum, 0).getDate();
+                const firstDay = new Date(year, monthNum - 1, 1).getDay();
+
+                let totalCheckins = 0;
+                const dailyCompletions = {};
+                const habitCompletions = {};
+
+                window.habits.forEach(habit => {
+                    habitCompletions[habit.name] = 0;
+                });
+
+                window.habits.forEach(habit => {
+                    habit.completedDates.forEach(date => {
+                        if (date.startsWith(month)) {
+                            totalCheckins++;
+                            dailyCompletions[date] = (dailyCompletions[date] || 0) + 1;
+                            habitCompletions[habit.name] = (habitCompletions[habit.name] || 0) + 1;
+                        }
+                    });
+                });
+
+                let bestDay = { date: '', count: 0 };
+                Object.entries(dailyCompletions).forEach(([date, count]) => {
+                    if (count > bestDay.count) bestDay = { date, count };
+                });
+
+                const daysWithData = Object.keys(dailyCompletions).length;
+                const completionRate = Math.round((daysWithData / daysInMonth) * 100);
+
+                document.getElementById('monthDaysCompleted').textContent = daysWithData;
+                document.getElementById('monthCompletionRate').textContent = `${completionRate}%`;
+                document.getElementById('monthBestDay').textContent = bestDay.date ? bestDay.date.slice(-2) + ' (' + bestDay.count + ')' : '-';
+                document.getElementById('monthTotalCheckins').textContent = totalCheckins;
+                document.getElementById('monthlyStats').style.display = 'grid';
+                document.getElementById('monthlyChartsContainer').style.display = 'grid';
+
+                updateMonthlyCharts(month, dailyCompletions, habitCompletions, daysInMonth);
+                generateMonthCalendar(month, daysInMonth, firstDay, dailyCompletions);
+            };
+
+            function updateMonthlyCharts(month, dailyCompletions, habitCompletions, daysInMonth) {
+                const totalHabits = window.habits.length;
+                const daysWithData = Object.keys(dailyCompletions).length;
+                const daysMissed = daysInMonth - daysWithData;
+
+                const pieCtx = document.getElementById('monthlyPieChart')?.getContext('2d');
+                if (pieCtx) {
+                    if (window.monthlyPieChart) window.monthlyPieChart.destroy();
+                    window.monthlyPieChart = new Chart(pieCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Days with progress', 'Days missed'],
+                            datasets: [{
+                                data: [daysWithData, daysMissed],
+                                backgroundColor: ['#00d4aa', '#2a3a4a'],
+                                borderColor: 'transparent',
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                    document.getElementById('monthlyPieLabel').textContent = `${daysWithData} days active`;
+                }
+
+                const barCtx = document.getElementById('monthlyBarChart')?.getContext('2d');
+                if (barCtx) {
+                    if (window.monthlyBarChart) window.monthlyBarChart.destroy();
+                    window.monthlyBarChart = new Chart(barCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(habitCompletions).map(name => name.length > 8 ? name.substring(0, 6) + '..' : name),
+                            datasets: [{
+                                label: 'completions',
+                                data: Object.values(habitCompletions),
+                                backgroundColor: '#00d4aa',
+                                borderRadius: 6,
+                                barPercentage: 0.6,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(255,255,255,0.05)' },
+                                    ticks: { color: '#6b7d8f' }
+                                },
+                                x: { ticks: { color: '#6b7d8f', maxRotation: 45, minRotation: 45 } }
+                            },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
+
+                const days = [];
+                const completionCounts = [];
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
+                    days.push(day);
+                    completionCounts.push(dailyCompletions[dateStr] || 0);
+                }
+
+                const lineCtx = document.getElementById('monthlyLineChart')?.getContext('2d');
+                if (lineCtx) {
+                    if (window.monthlyLineChart) window.monthlyLineChart.destroy();
+                    window.monthlyLineChart = new Chart(lineCtx, {
+                        type: 'line',
+                        data: {
+                            labels: days.filter((_, i) => i % 5 === 0),
+                            datasets: [{
+                                label: 'completions',
+                                data: completionCounts,
+                                borderColor: '#00d4aa',
+                                backgroundColor: 'rgba(0,212,170,0.1)',
+                                borderWidth: 2,
+                                pointBackgroundColor: '#00d4aa',
+                                pointBorderColor: '#0a0f14',
+                                pointBorderWidth: 1,
+                                pointRadius: 2,
+                                pointHoverRadius: 4,
+                                tension: 0.2,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: totalHabits,
+                                    grid: { color: 'rgba(255,255,255,0.05)' },
+                                    ticks: { color: '#6b7d8f' }
+                                },
+                                x: {
+                                    ticks: { color: '#6b7d8f' },
+                                    title: { display: true, text: 'Day of month', color: '#6b7d8f' }
+                                }
+                            },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
+            }
+
+            function generateMonthCalendar(month, daysInMonth, firstDay, dailyCompletions) {
+                const calendar = document.getElementById('monthCalendar');
+                const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const totalHabits = window.habits.length;
+
+                let html = '';
+
+                weekDays.forEach(day => {
+                    html += `<div class="text-center text-xs mb-2" style="color: var(--muted);">${day}</div>`;
+                });
+
+                for (let i = 0; i < firstDay; i++) {
+                    html += `<div class="text-center p-2"></div>`;
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateStr = `${month}-${day.toString().padStart(2, '0')}`;
+                    const completed = dailyCompletions[dateStr] || 0;
+                    const intensity = totalHabits > 0 ? (completed / totalHabits) * 100 : 0;
+
+                    let bgColor = 'var(--card)';
+                    if (completed > 0) {
+                        if (intensity >= 75) bgColor = '#00d4aa';
+                        else if (intensity >= 50) bgColor = '#00b894';
+                        else if (intensity >= 25) bgColor = '#00a37a';
+                        else bgColor = '#1a5a4a';
+                    }
+
+                    html += `
             <div class="text-center p-2 rounded-lg text-sm transition-all hover:scale-105" 
                  style="background: ${bgColor}; color: ${completed > 0 ? 'black' : 'var(--muted)'}; border: 1px solid var(--border);">
               <div class="font-bold">${day}</div>
               ${completed > 0 ? `<div class="text-xs mt-1">${completed}/${totalHabits}</div>` : ''}
             </div>
           `;
-        }
-        
-        calendar.innerHTML = html;
-      }
+                }
 
-      window.exportMonthData = function() {
-        const month = document.getElementById('monthSelector').value;
-        if (!month) {
-          alert('Please select a month first');
-          return;
-        }
+                calendar.innerHTML = html;
+            }
 
-        const [year, monthNum] = month.split('-');
-        const monthData = {
-          month: `${monthNames[parseInt(monthNum)-1]} ${year}`,
-          year: year,
-          month: monthNum,
-          habits: window.habits.map(habit => ({
-            name: habit.name,
-            icon: habit.icon,
-            completedDates: habit.completedDates.filter(date => date.startsWith(month))
-          })),
-          stats: {
-            daysCompleted: document.getElementById('monthDaysCompleted').textContent,
-            completionRate: document.getElementById('monthCompletionRate').textContent,
-            bestDay: document.getElementById('monthBestDay').textContent,
-            totalCheckins: document.getElementById('monthTotalCheckins').textContent
-          }
-        };
+            window.exportMonthData = function () {
+                const month = document.getElementById('monthSelector').value;
+                if (!month) {
+                    alert('Please select a month first');
+                    return;
+                }
 
-        const data = JSON.stringify(monthData, null, 2);
-        const blob = new Blob([data], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `myhabbit_${month}_summary.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      };
+                const [year, monthNum] = month.split('-');
+                const monthData = {
+                    month: `${monthNames[parseInt(monthNum) - 1]} ${year}`,
+                    year: year,
+                    month: monthNum,
+                    habits: window.habits.map(habit => ({
+                        name: habit.name,
+                        icon: habit.icon,
+                        progressive: habit.progressive || false,
+                        completedDates: habit.completedDates.filter(date => date.startsWith(month))
+                    })),
+                    stats: {
+                        daysCompleted: document.getElementById('monthDaysCompleted').textContent,
+                        completionRate: document.getElementById('monthCompletionRate').textContent,
+                        bestDay: document.getElementById('monthBestDay').textContent,
+                        totalCheckins: document.getElementById('monthTotalCheckins').textContent
+                    }
+                };
 
-      // ----- AUTO-BACKUP REMINDER -----
-      window.checkForAutoBackup = function() {
-        const lastBackup = localStorage.getItem('lastBackupDate');
-        const today = new Date().toISOString().slice(0,10);
-        
-        if (lastBackup !== today && window.habits.length > 0) {
-          const reminderDiv = document.createElement('div');
-          reminderDiv.className = 'fixed bottom-4 right-4 bg-card border border-accent p-4 rounded-lg shadow-lg z-50 animate-slide-up';
-          reminderDiv.innerHTML = `
+                const data = JSON.stringify(monthData, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `myhabbit_${month}_summary.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            // ----- AUTO-BACKUP REMINDER -----
+            window.checkForAutoBackup = function () {
+                const lastBackup = localStorage.getItem('lastBackupDate');
+                const today = new Date().toISOString().slice(0, 10);
+
+                if (lastBackup !== today && window.habits.length > 0) {
+                    const reminderDiv = document.createElement('div');
+                    reminderDiv.className = 'fixed bottom-4 right-4 bg-card border border-accent p-4 rounded-lg shadow-lg z-50 animate-slide-up';
+                    reminderDiv.innerHTML = `
             <p class="text-sm mb-2">📁 Save today's progress?</p>
             <div class="flex gap-2">
               <button onclick="saveTodayBackup(); this.parentElement.parentElement.remove(); localStorage.setItem('lastBackupDate', '${today}');" 
@@ -809,199 +1901,201 @@
                 class="px-3 py-1 bg-border rounded-lg text-sm">Later</button>
             </div>
           `;
-          document.body.appendChild(reminderDiv);
-          setTimeout(() => reminderDiv.remove(), 30000);
-        }
-      };
+                    document.body.appendChild(reminderDiv);
+                    setTimeout(() => reminderDiv.remove(), 30000);
+                }
+            };
 
-      // ----- HELPER FUNCTIONS -----
-      function getWeekDates() {
-        const now = new Date();
-        const dayOfWeek = now.getDay();
-        const monday = new Date(now);
-        monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-        const dates = [];
-        for (let i = 0; i < 7; i++) {
-          const date = new Date(monday);
-          date.setDate(monday.getDate() + i);
-          dates.push(date.toISOString().split('T')[0]);
-        }
-        return dates;
-      }
-
-      function calculateStreak(habit) {
-        const today = new Date();
-        let streak = 0;
-        for (let i = 0; i < 365; i++) {
-          const checkDate = new Date(today);
-          checkDate.setDate(today.getDate() - i);
-          const dateStr = checkDate.toISOString().split('T')[0];
-          if (habit.completedDates.includes(dateStr)) streak++;
-          else break;
-        }
-        return streak;
-      }
-
-      function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      }
-
-      // ----- WEEKLY CHART FUNCTIONS -----
-      function updateAllCharts() {
-        const dates = getWeekDates();
-        const todayStr = new Date().toISOString().split('T')[0];
-        const totalHabits = window.habits.length;
-
-        // PIE chart
-        let completedToday = 0;
-        window.habits.forEach(h => { if (h.completedDates.includes(todayStr)) completedToday++; });
-        const remaining = totalHabits - completedToday;
-
-        const pieCtx = document.getElementById('pieChart')?.getContext('2d');
-        if (pieCtx) {
-          if (window.pieChart) window.pieChart.destroy();
-          window.pieChart = new Chart(pieCtx, {
-            type: 'pie',
-            data: {
-              labels: ['Completed', 'Remaining'],
-              datasets: [{
-                data: [completedToday, remaining],
-                backgroundColor: ['#00d4aa', '#2a3a4a'],
-                borderColor: 'transparent',
-              }]
-            },
-            options: { 
-              responsive: true, 
-              maintainAspectRatio: true,
-              plugins: { legend: { display: false } }
+            // ----- HELPER FUNCTIONS -----
+            function getWeekDates() {
+                const now = new Date();
+                const dayOfWeek = now.getDay();
+                const monday = new Date(now);
+                monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+                const dates = [];
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(monday);
+                    date.setDate(monday.getDate() + i);
+                    dates.push(date.toISOString().split('T')[0]);
+                }
+                return dates;
             }
-          });
-        }
 
-        // BAR chart
-        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        const perDayCounts = dates.map(date => {
-          let count = 0;
-          window.habits.forEach(h => { if (h.completedDates.includes(date)) count++; });
-          return count;
-        });
-
-        const barCtx = document.getElementById('barChart')?.getContext('2d');
-        if (barCtx) {
-          if (window.barChart) window.barChart.destroy();
-          window.barChart = new Chart(barCtx, {
-            type: 'bar',
-            data: {
-              labels: dayNames,
-              datasets: [{
-                label: 'completed',
-                data: perDayCounts,
-                backgroundColor: '#00d4aa',
-                borderRadius: 6,
-                barPercentage: 0.6,
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: true,
-              scales: { 
-                y: { 
-                  beginAtZero: true, 
-                  grid: { color: 'rgba(255,255,255,0.05)' }, 
-                  ticks: { color: '#6b7d8f' } 
-                },
-                x: { ticks: { color: '#6b7d8f' } }
-              },
-              plugins: { legend: { display: false } }
+            function calculateStreak(habit) {
+                const today = new Date();
+                let streak = 0;
+                for (let i = 0; i < 365; i++) {
+                    const checkDate = new Date(today);
+                    checkDate.setDate(today.getDate() - i);
+                    const dateStr = checkDate.toISOString().split('T')[0];
+                    if (habit.completedDates.includes(dateStr)) streak++;
+                    else break;
+                }
+                return streak;
             }
-          });
-        }
 
-        // LINE chart
-        const completionPercentages = dates.map(date => {
-          if (totalHabits === 0) return 0;
-          let completed = 0;
-          window.habits.forEach(h => { if (h.completedDates.includes(date)) completed++; });
-          return Math.round((completed / totalHabits) * 100);
-        });
-
-        const lineCtx = document.getElementById('lineChart')?.getContext('2d');
-        if (lineCtx) {
-          if (window.lineChart) window.lineChart.destroy();
-          window.lineChart = new Chart(lineCtx, {
-            type: 'line',
-            data: {
-              labels: dayNames,
-              datasets: [{
-                label: 'completion %',
-                data: completionPercentages,
-                borderColor: '#00d4aa',
-                backgroundColor: 'rgba(0,212,170,0.1)',
-                borderWidth: 2,
-                pointBackgroundColor: '#00d4aa',
-                pointBorderColor: '#0a0f14',
-                pointBorderWidth: 1,
-                pointRadius: 3,
-                pointHoverRadius: 5,
-                tension: 0.2,
-                fill: true
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: true,
-              scales: { 
-                y: { 
-                  beginAtZero: true, 
-                  max: 100,
-                  grid: { color: 'rgba(255,255,255,0.05)' }, 
-                  ticks: { color: '#6b7d8f' } 
-                },
-                x: { ticks: { color: '#6b7d8f' } }
-              },
-              plugins: { legend: { display: false } }
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
             }
-          });
-        }
-      }
 
-      // ----- RENDER FUNCTIONS -----
-      function renderWeekDays() {
-        const container = document.getElementById('week-days');
-        if (!container) return;
-        const dates = getWeekDates();
-        const todayStr = new Date().toISOString().split('T')[0];
-        container.innerHTML = dates.map((date, i) => {
-          const dayNum = new Date(date).getDate();
-          const isToday = date === todayStr;
-          return `<div class="text-center">
+            // ----- WEEKLY CHART FUNCTIONS -----
+            function updateAllCharts() {
+                const dates = getWeekDates();
+                const todayStr = new Date().toISOString().split('T')[0];
+                const totalHabits = window.habits.length;
+
+                let completedToday = 0;
+                window.habits.forEach(h => { if (h.completedDates.includes(todayStr)) completedToday++; });
+                const remaining = totalHabits - completedToday;
+
+                const pieCtx = document.getElementById('pieChart')?.getContext('2d');
+                if (pieCtx) {
+                    if (window.pieChart) window.pieChart.destroy();
+                    window.pieChart = new Chart(pieCtx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Completed', 'Remaining'],
+                            datasets: [{
+                                data: [completedToday, remaining],
+                                backgroundColor: ['#00d4aa', '#2a3a4a'],
+                                borderColor: 'transparent',
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
+
+                const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                const perDayCounts = dates.map(date => {
+                    let count = 0;
+                    window.habits.forEach(h => { if (h.completedDates.includes(date)) count++; });
+                    return count;
+                });
+
+                const barCtx = document.getElementById('barChart')?.getContext('2d');
+                if (barCtx) {
+                    if (window.barChart) window.barChart.destroy();
+                    window.barChart = new Chart(barCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: dayNames,
+                            datasets: [{
+                                label: 'completed',
+                                data: perDayCounts,
+                                backgroundColor: '#00d4aa',
+                                borderRadius: 6,
+                                barPercentage: 0.6,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(255,255,255,0.05)' },
+                                    ticks: { color: '#6b7d8f' }
+                                },
+                                x: { ticks: { color: '#6b7d8f' } }
+                            },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
+
+                const completionPercentages = dates.map(date => {
+                    if (totalHabits === 0) return 0;
+                    let completed = 0;
+                    window.habits.forEach(h => { if (h.completedDates.includes(date)) completed++; });
+                    return Math.round((completed / totalHabits) * 100);
+                });
+
+                const lineCtx = document.getElementById('lineChart')?.getContext('2d');
+                if (lineCtx) {
+                    if (window.lineChart) window.lineChart.destroy();
+                    window.lineChart = new Chart(lineCtx, {
+                        type: 'line',
+                        data: {
+                            labels: dayNames,
+                            datasets: [{
+                                label: 'completion %',
+                                data: completionPercentages,
+                                borderColor: '#00d4aa',
+                                backgroundColor: 'rgba(0,212,170,0.1)',
+                                borderWidth: 2,
+                                pointBackgroundColor: '#00d4aa',
+                                pointBorderColor: '#0a0f14',
+                                pointBorderWidth: 1,
+                                pointRadius: 3,
+                                pointHoverRadius: 5,
+                                tension: 0.2,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    grid: { color: 'rgba(255,255,255,0.05)' },
+                                    ticks: { color: '#6b7d8f' }
+                                },
+                                x: { ticks: { color: '#6b7d8f' } }
+                            },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
+            }
+
+            // ----- RENDER FUNCTIONS -----
+            function renderWeekDays() {
+                const container = document.getElementById('week-days');
+                if (!container) return;
+                const dates = getWeekDates();
+                const todayStr = new Date().toISOString().split('T')[0];
+                container.innerHTML = dates.map((date, i) => {
+                    const dayNum = new Date(date).getDate();
+                    const isToday = date === todayStr;
+                    return `<div class="text-center">
             <p class="text-xs mb-1" style="color: var(--muted);">${weekDays[i]}</p>
             <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium ${isToday ? 'text-black' : ''}" style="${isToday ? 'background: var(--accent);' : ''}">${dayNum}</div>
           </div>`;
-        }).join('');
-      }
+                }).join('');
+            }
 
-      function renderHabits() {
-        const container = document.getElementById('habits-container');
-        const emptyState = document.getElementById('empty-state');
-        const dates = getWeekDates();
-        const todayStr = new Date().toISOString().split('T')[0];
+            function renderHabits() {
+                const container = document.getElementById('habits-container');
+                const emptyState = document.getElementById('empty-state');
+                const dates = getWeekDates();
+                const todayStr = new Date().toISOString().split('T')[0];
 
-        if (!window.habits.length) {
-          container.innerHTML = '';
-          emptyState.style.display = 'block';
-          updateAllCharts();
-          return;
-        }
+                if (!window.habits.length) {
+                    container.innerHTML = '';
+                    emptyState.style.display = 'block';
+                    updateAllCharts();
+                    return;
+                }
 
-        emptyState.style.display = 'none';
+                emptyState.style.display = 'none';
 
-        container.innerHTML = window.habits.map((habit, index) => {
-          const streak = calculateStreak(habit);
-          return `
-            <div class="habit-card p-5 slide-up" style="opacity: 0; animation-delay: ${0.1 * (index + 1)}s;">
+                container.innerHTML = window.habits.map((habit, index) => {
+                    const streak = calculateStreak(habit);
+                    const streakClass = streak >= 30 ? 'streak-30' : streak >= 7 ? 'streak-7' : '';
+                    const isProgressive = habit.progressive || false;
+                    const todayGoal = isProgressive ? calculateTodaysGoal(habit) : null;
+                    const reachedMax = isProgressive ? hasReachedMax(habit) : false;
+                    
+                    return `
+            <div class="habit-card p-5 slide-up ${streakClass} ${isProgressive ? 'progressive' : ''}" style="opacity: 0; animation-delay: ${0.1 * (index + 1)}s;">
               <div class="flex items-start justify-between mb-4">
                 <div class="flex items-center gap-3">
                   <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: var(--accent-dim); color: var(--accent);">
@@ -1011,6 +2105,7 @@
                     <h3 class="font-semibold text-lg">${escapeHtml(habit.name)}</h3>
                     <div class="flex items-center gap-2 mt-1">
                       ${streak > 0 ? `<span class="streak-badge">${streak} day streak</span>` : ''}
+                      ${reachedMax ? `<span class="streak-badge" style="background: #f97316; color: black;">MAX 🔒</span>` : ''}
                     </div>
                   </div>
                 </div>
@@ -1020,183 +2115,277 @@
                   </svg>
                 </button>
               </div>
+              
+              ${isProgressive ? `
+              <div class="progress-goal mb-2">
+                <span>🎯 Today's goal:</span>
+                <span class="font-bold">${todayGoal.toFixed(1)} ${habit.unit || 'units'}</span>
+                <span class="text-xs" style="color: var(--muted);">(Day ${habit.completedDates.length + 1})</span>
+              </div>
+              <div class="progress-bar-container mb-3">
+                <div class="progress-bar-fill" style="width: ${(todayGoal / habit.maxValue) * 100}%"></div>
+              </div>
+              ` : ''}
+              
               <div class="flex gap-2">
                 ${dates.map(date => {
-                  const isCompleted = habit.completedDates.includes(date);
-                  const isToday = date === todayStr;
-                  const dayNum = new Date(date).getDate();
-                  return `
+                        const isCompleted = habit.completedDates.includes(date);
+                        const isToday = date === todayStr;
+                        const isFuture = date > todayStr;
+                        const dayNum = new Date(date).getDate();
+                        return `
                     <button 
-                      class="day-btn ${isCompleted ? 'completed' : ''} ${isToday ? 'today' : ''}"
-                      onclick="window.toggleDay('${habit.id}', '${date}')"
-                      aria-label="${isCompleted ? 'Mark incomplete' : 'Mark complete'}"
+                      class="day-btn ${isCompleted ? 'completed' : ''} ${isToday ? 'today' : ''} ${isFuture ? 'future-date' : ''}"
+                      ${isFuture ? 'disabled title="Cannot mark future dates"' : `onclick="window.toggleDay('${habit.id}', '${date}')"`}
+                      aria-label="${isFuture ? 'Future date (locked)' : isCompleted ? 'Mark incomplete' : 'Mark complete'}"
                     >
-                      ${isCompleted ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : dayNum}
+                      ${isCompleted ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : isFuture ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>' : dayNum}
                     </button>
                   `;
-                }).join('')}
+                    }).join('')}
               </div>
             </div>
           `;
-        }).join('');
-        
-        updateAllCharts();
-        window.populateMonthSelector();
-      }
+                }).join('');
 
-      function updateStats() {
-        const dates = getWeekDates();
-        const todayStr = new Date().toISOString().split('T')[0];
-        
-        let todayCompleted = 0;
-        window.habits.forEach(h => { if (h.completedDates.includes(todayStr)) todayCompleted++; });
-        
-        document.getElementById('today-completed').textContent = `${todayCompleted}/${window.habits.length}`;
-        const progressPercent = window.habits.length ? (todayCompleted / window.habits.length) * 100 : 0;
-        document.getElementById('today-progress').style.width = `${progressPercent}%`;
+                updateAllCharts();
+                window.populateMonthSelector();
+            }
 
-        let bestStreak = 0;
-        window.habits.forEach(h => { bestStreak = Math.max(bestStreak, calculateStreak(h)); });
-        document.getElementById('best-streak').textContent = bestStreak;
+            function updateStats() {
+                const dates = getWeekDates();
+                const todayStr = new Date().toISOString().split('T')[0];
 
-        let totalCompleted = 0;
-        window.habits.forEach(h => { dates.forEach(d => { if (h.completedDates.includes(d)) totalCompleted++; }); });
-        const totalPossible = window.habits.length * 7;
-        const weekPercent = totalPossible ? Math.round((totalCompleted / totalPossible) * 100) : 0;
-        document.getElementById('week-completion').textContent = `${weekPercent}%`;
-        document.getElementById('total-habits').textContent = window.habits.length;
-      }
+                let todayCompleted = 0;
+                window.habits.forEach(h => { if (h.completedDates.includes(todayStr)) todayCompleted++; });
 
-      function saveHabits() {
-        localStorage.setItem('habits', JSON.stringify(window.habits));
-      }
+                document.getElementById('today-completed').textContent = `${todayCompleted}/${window.habits.length}`;
+                const progressPercent = window.habits.length ? (todayCompleted / window.habits.length) * 100 : 0;
+                document.getElementById('today-progress').style.width = `${progressPercent}%`;
 
-      // ----- GLOBAL FUNCTIONS -----
-      window.toggleDay = function(habitId, date) {
-        const habit = window.habits.find(h => h.id === habitId);
-        if (!habit) return;
-        
-        const idx = habit.completedDates.indexOf(date);
-        if (idx > -1) {
-          habit.completedDates.splice(idx, 1);
-        } else {
-          habit.completedDates.push(date);
-        }
-        
-        saveHabits();
-        renderHabits();
-        updateStats();
-        
-        setTimeout(() => {
-          document.querySelectorAll('.day-btn.completed').forEach(btn => btn.classList.add('check-animation'));
-        }, 10);
-      };
+                let bestStreak = 0;
+                window.habits.forEach(h => { bestStreak = Math.max(bestStreak, calculateStreak(h)); });
+                document.getElementById('best-streak').textContent = bestStreak;
 
-      window.openModal = function() {
-        document.getElementById('modal').classList.add('active');
-        document.getElementById('habit-name').focus();
-        window.selectedIcon = 'fitness';
-        document.querySelectorAll('.icon-btn').forEach(btn => {
-          if (btn.dataset.icon === 'fitness') {
-            btn.style.borderColor = 'var(--accent)';
-            btn.style.background = 'var(--accent-dim)';
-          } else {
-            btn.style.borderColor = 'var(--border)';
-            btn.style.background = 'transparent';
-          }
-        });
-      };
+                let totalCompleted = 0;
+                window.habits.forEach(h => { dates.forEach(d => { if (h.completedDates.includes(d)) totalCompleted++; }); });
+                const totalPossible = window.habits.length * 7;
+                const weekPercent = totalPossible ? Math.round((totalCompleted / totalPossible) * 100) : 0;
+                document.getElementById('week-completion').textContent = `${weekPercent}%`;
+                document.getElementById('total-habits').textContent = window.habits.length;
+            }
 
-      window.closeModal = function() {
-        document.getElementById('modal').classList.remove('active');
-        document.getElementById('habit-name').value = '';
-      };
+            function saveHabits() {
+                localStorage.setItem('habits', JSON.stringify(window.habits));
+            }
 
-      window.selectIcon = function(btn) {
-        document.querySelectorAll('.icon-btn').forEach(b => {
-          b.style.borderColor = 'var(--border)';
-          b.style.background = 'transparent';
-        });
-        btn.style.borderColor = 'var(--accent)';
-        btn.style.background = 'var(--accent-dim)';
-        window.selectedIcon = btn.dataset.icon;
-      };
+            // ----- GLOBAL FUNCTIONS -----
+            window.toggleDay = function (habitId, date) {
+                const habit = window.habits.find(h => h.id === habitId);
+                if (!habit) return;
 
-      window.addHabit = function(e) {
-        e.preventDefault();
-        const nameInput = document.getElementById('habit-name');
-        const name = nameInput.value.trim();
-        if (!name) return;
+                // Block future dates
+                const todayStr = new Date().toISOString().split('T')[0];
+                if (date > todayStr) return;
 
-        const habit = {
-          id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 8),
-          name: name,
-          icon: window.selectedIcon,
-          completedDates: [],
-          createdAt: new Date().toISOString()
-        };
-        
-        window.habits.push(habit);
-        saveHabits();
-        window.closeModal();
-        renderHabits();
-        updateStats();
-        nameInput.value = '';
-      };
+                const wasCompleted = habit.completedDates.includes(date);
+                const idx = habit.completedDates.indexOf(date);
 
-      window.deleteHabit = function(habitId) {
-        if (!confirm('Delete this habit?')) return;
-        window.habits = window.habits.filter(h => h.id !== habitId);
-        saveHabits();
-        renderHabits();
-        updateStats();
-      };
+                if (idx > -1) {
+                    habit.completedDates.splice(idx, 1);
+                    window.addXP(-10, 'Uncompleted');
+                } else {
+                    habit.completedDates.push(date);
+                    window.addXP(10, 'Habit completed');
 
-      // ----- DATE & GREETING -----
-      function updateDateTime() {
-        const now = new Date();
-        const options = { weekday: 'long', month: 'long', day: 'numeric' };
-        document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
-        const hour = now.getHours();
-        let greeting = 'Good evening';
-        if (hour < 12) greeting = 'Good morning Shivam';
-        else if (hour < 16) greeting = 'Good afternoon Shivam';
-        else if (hour < 24) greeting = 'Good evening Shivam';
-        document.getElementById('greeting').textContent = greeting;
-      }
+                    // Check for first habit achievement
+                    if (window.player.totalCompletions === 1) {
+                        unlockAchievement('firstStep');
+                    }
+                }
 
-      // ----- INITIALIZATION -----
-      function init() {
-        updateDateTime();
-        renderWeekDays();
-        renderHabits();
-        updateStats();
-        setInterval(updateDateTime, 60000);
-        setTimeout(window.checkForAutoBackup, 2000);
+                saveHabits();
+                renderHabits();
+                updateStats();
+                checkDailyBonus();
+                checkStreakAchievements();
+                checkPerfectWeek();
 
-        const form = document.getElementById('add-habit-form');
-        if (form) {
-          form.addEventListener('submit', window.addHabit);
-        }
+                setTimeout(() => {
+                    document.querySelectorAll('.day-btn.completed').forEach(btn => btn.classList.add('check-animation'));
+                }, 10);
+            };
 
-        document.addEventListener('keydown', function(e) {
-          if (e.key === 'Escape') window.closeModal();
-        });
+            window.openModal = function () {
+                document.getElementById('modal').classList.add('active');
+                document.getElementById('habit-name').focus();
+                window.selectedIcon = 'fitness';
+                
+                // Reset progressive toggle
+                const toggle = document.getElementById('progressive-toggle');
+                if (toggle) {
+                    toggle.checked = false;
+                    document.getElementById('progressive-fields').classList.add('hidden');
+                    document.getElementById('progressive-fields').classList.remove('visible');
+                }
+                
+                document.querySelectorAll('.icon-btn').forEach(btn => {
+                    if (btn.dataset.icon === 'fitness') {
+                        btn.style.borderColor = 'var(--accent)';
+                        btn.style.background = 'var(--accent-dim)';
+                    } else {
+                        btn.style.borderColor = 'var(--border)';
+                        btn.style.background = 'transparent';
+                    }
+                });
+            };
 
-        const modalEl = document.getElementById('modal');
-        if (modalEl) {
-          modalEl.addEventListener('click', function(e) {
-            if (e.target === modalEl) window.closeModal();
-          });
-        }
-      }
+            window.closeModal = function () {
+                document.getElementById('modal').classList.remove('active');
+                document.getElementById('habit-name').value = '';
+            };
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
-      }
-    })();
-  </script>
+            window.selectIcon = function (btn) {
+                document.querySelectorAll('.icon-btn').forEach(b => {
+                    b.style.borderColor = 'var(--border)';
+                    b.style.background = 'transparent';
+                });
+                btn.style.borderColor = 'var(--accent)';
+                btn.style.background = 'var(--accent-dim)';
+                window.selectedIcon = btn.dataset.icon;
+            };
+
+            window.addHabit = function (e) {
+                e.preventDefault();
+                const nameInput = document.getElementById('habit-name');
+                const name = nameInput.value.trim();
+                if (!name) return;
+
+                const toggle = document.getElementById('progressive-toggle');
+                const isProgressive = toggle && toggle.checked;
+
+                const habit = {
+                    id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 8),
+                    name: name,
+                    icon: window.selectedIcon,
+                    completedDates: [],
+                    createdAt: new Date().toISOString(),
+                    progressive: isProgressive
+                };
+
+                // Add progressive fields if enabled
+                if (isProgressive) {
+                    habit.startValue = parseFloat(document.getElementById('start-value').value) || 1.0;
+                    habit.increment = parseFloat(document.getElementById('increment').value) || 0.5;
+                    habit.maxValue = parseFloat(document.getElementById('max-value').value) || 3.0;
+                    habit.unit = document.getElementById('unit').value || 'Liters';
+                }
+
+                window.habits.push(habit);
+                saveHabits();
+                window.closeModal();
+                renderHabits();
+                updateStats();
+                nameInput.value = '';
+            };
+
+            window.deleteHabit = function (habitId) {
+                if (!confirm('Delete this habit?')) return;
+                window.habits = window.habits.filter(h => h.id !== habitId);
+                saveHabits();
+                renderHabits();
+                updateStats();
+            };
+
+            // ----- DATE & GREETING -----
+            function updateDateTime() {
+                const now = new Date();
+                const options = { weekday: 'long', month: 'long', day: 'numeric' };
+                document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', options);
+                const hour = now.getHours();
+                let greeting = 'Good evening';
+                if (hour < 12) greeting = 'Good morning Shivam';
+                else if (hour < 16) greeting = 'Good afternoon Shivam';
+                else if (hour < 24) greeting = 'Good evening Shivam';
+                document.getElementById('greeting').textContent = greeting;
+            }
+
+            // ----- INITIALIZATION -----
+            function init() {
+                updateDateTime();
+                renderWeekDays();
+                renderHabits();
+                updateStats();
+                updatePlayerUI();
+                renderAchievements();
+                checkDailyReset();
+
+                // Add event listeners for progressive fields
+                const startInput = document.getElementById('start-value');
+                const incrementInput = document.getElementById('increment');
+                if (startInput && incrementInput) {
+                    startInput.addEventListener('input', updateExampleProgression);
+                    incrementInput.addEventListener('input', updateExampleProgression);
+                }
+
+                setInterval(updateDateTime, 60000);
+                setTimeout(window.checkForAutoBackup, 2000);
+
+                const form = document.getElementById('add-habit-form');
+                if (form) {
+                    form.addEventListener('submit', window.addHabit);
+                }
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') window.closeModal();
+                });
+
+                const modalEl = document.getElementById('modal');
+                if (modalEl) {
+                    modalEl.addEventListener('click', function (e) {
+                        if (e.target === modalEl) window.closeModal();
+                    });
+                }
+            }
+
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            window.habits = JSON.parse(localStorage.getItem('habits')) || [];
+            window.selectedIcon = 'fitness';
+
+            const icons = {
+                fitness: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M2 12h4M18 12h4M6 6v12M18 6v12"/></svg>',
+                book: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+                water: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
+                sleep: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+                code: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+                heart: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+                coffee: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+                meditation: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/><path d="M8 12v4"/><path d="M16 12v4"/><path d="M12 20v-8"/></svg>',
+                running: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="17" cy="4" r="2"/><path d="M13 10l-2-2-2 2 2 4 2 2-2 4"/><path d="M7 10l3 3 1-2"/><path d="M17 16l-3-3 2-4"/></svg>',
+                yoga: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="2"/><path d="M5 16l3-4 4 4 4-4 3 4"/><path d="M3 20h18"/><path d="M12 12v8"/></svg>',
+                money: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>',
+                gym: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="8" rx="1"/><path d="M8 4v4"/><path d="M16 4v4"/><path d="M8 16v4"/><path d="M16 16v4"/></svg>',
+                study: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+                brain: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a3 3 0 0 0-3 3v6.5"/><path d="M12 3a3 3 0 0 1 3 3v6.5"/><path d="M6 9a3 3 0 0 0-3 3v3a3 3 0 0 0 3 3"/><path d="M18 9a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3"/><path d="M9 21v-3a3 3 0 0 1 6 0v3"/></svg>',
+                plant: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22v-4"/><path d="M8 8a4 4 0 0 1 8 0v6a4 4 0 0 1-8 0V8z"/><path d="M4 14h16"/><path d="M12 2v2"/></svg>',
+                music: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>'
+            };
+
+            window.pieChart = null;
+            window.barChart = null;
+            window.lineChart = null;
+            window.monthlyPieChart = null;
+            window.monthlyBarChart = null;
+            window.monthlyLineChart = null;
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
 </body>
+
 </html>
